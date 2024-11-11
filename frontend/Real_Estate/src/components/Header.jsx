@@ -35,7 +35,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="bg-slate-200 shadow-md text-blue-500">
+    <header className="bg-slate-200 shadow-md text-black-500">
       <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
         <Link to="/" className="flex-shrink-0">
           <h1 className="font-bold text-sm sm:text-xl flex flex-wrap">
