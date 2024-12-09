@@ -94,7 +94,7 @@ export default function App()
 
 $ npm run dev
 ==========================================================================
-Create Header component 
+I create Header component and design it.
 ==========================================================================
 1:) Create another folder in src (Components) in which create a file
     * Header.jsx
