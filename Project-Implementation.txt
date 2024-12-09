@@ -1,0 +1,52 @@
+==========================================================================
+Install React js and Tailwind CSS and create the first template
+==========================================================================
+1:) Create a react project using the command
+$ npm create vite@latest project
+
+
+2:) Go to project folder 
+$ cd project
+$ npm i
+
+3:) install tailwind css using vite make sure you are in project
+
+$ npm install -D tailwindcss postcss autoprefixer
+$ npx tailwindcss init -p
+
+4:) Remove all content from tailwind.config.js and paste 
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+5:) Remove all content from index.css which is in src folder and paste
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+6:) Delete App.css from src, in public folder delete vite.svg, in assets which is in src delete react.svg
+
+7:) Remove everything from App.jsx which is in src and write this code:
+
+export default function App() {
+  return (
+    <div className="text-center text-xl text-blue-500">
+      Welcome to Tailwind CSS!
+    </div>
+  );
+}
+
+
+8:) Now run the project
+
+$ npm run dev
