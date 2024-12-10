@@ -1,3 +1,4 @@
+
 ==========================================================================
 Install React js and Tailwind CSS and create the first template
 ==========================================================================
@@ -195,3 +196,187 @@ export default function Header() {
     // Create Header component start
   );
 }
+
+
+==========================================================================
+I create and run the server 
+==========================================================================
+1:) First i create a separet folder (api) in my FYP folder then we need to initialize a packege.json file but we need to do it in FYP folder and then i run a command
+
+$ npm init -y
+
+by using that command we create a package.json file in FYP folder.
+
+2:) then install express in FYP folder using the command 
+
+$ npm i express
+
+by using this command we create Package-lock.json file and also create node_modules folder.
+
+3:) then go to api folder and create index.js file and write the content 
+
+import express from "express";
+
+const app = express();
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!!!!!!!!!!");
+});
+
+4:) Also add some module after "main": "index.js", in packege.json file
+
+  "main": "index.js",
+
+  we add this line 
+  "type": "module",
+
+5:) We do some changes but for each time we need to restart the server which is time consuming so we can fixed it by using nodemon. we can install by using the command make sure to install it in FYP HOME(root)
+
+$ npm i nodemon
+
+6:) After install nodemon add some packege for it in packege.json file which is in FYP HOME
+Romeve this line from packege.json file
+"test": "echo \"Error: no test specified\" && exit 1"
+
+7:) Add these two lines
+
+  "scripts": {
+    "dev": "nodemon api/index.js",
+    "start": "node api/index.js"
+  },
+
+8:) Run the server by using the command in FYP HOME folder
+
+$ npm run dev
+
+==========================================================================
+Connect to database 
+==========================================================================
+1:) Set Up MySQL in XAMPP
+* Start XAMPP:
+  Open the XAMPP Control Panel.
+  Start the Apache and MySQL modules.
+* Access phpMyAdmin:
+  Open your browser and go to http://localhost/phpmyadmin.
+* Create a Database:
+  In phpMyAdmin, create a database for your project (e.g., articestate).
+
+2:) Now click on phpMyAdmin then click on User accounts then click on Add user account.
+
+User name: articestate
+Host name: localhost
+Password: 12345
+Re-type: 12345
+
+* Global privileges  check all
+* click on Go
+
+3:) Install MySQL Driver for Node.js
+Navigate to the FYP HOME folder in your terminal.
+Run the following command to install the mysql2 package
+
+$ npm i mysql2
+
+4:) Set Up Database Connection in api/db.js
+In your api folder, create a file called db.js and add the following code to connect to the database. This code does not require creating tables:
+
+import mysql from 'mysql2';
+
+// Create a connection pool without needing a specific table
+const db = mysql.createPool({
+  host: 'localhost',       // XAMPP MySQL server
+  user: 'articestate',     // Username you created
+  password: '12345',       // Password you created
+  database: 'articestate', // Database name you created
+});
+
+// Test the connection
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('Database connection failed:', err.message);
+  } else {
+    console.log('Connected to the MySQL database!');
+    connection.release(); // Release the connection back to the pool
+  }
+});
+
+export default db;
+
+This connection code will allow your app to connect to the articestate database even if no tables are created in it. You can interact with the database or query it later once you have tables.
+
+5:) Use the Database Connection in index.js
+Now, in your index.js file (located in the api folder), you can import the db.js file and use the connection for future queries or operations:
+
+import express from "express";
+import db from "./db.js";
+
+const app = express();
+
+// Middleware to parse JSON
+app.use(express.json());
+
+// Test Route
+app.get("/api/test", (req, res) => {
+  res.send("Connected to the database!");
+});
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!");
+});
+
+6:) Run the Server: In your terminal, navigate to the root of your project and run:
+
+$ npm run dev
+
+This will start your server and you can test the database connection. The /api/test route will respond with a message, verifying that the connection is active.
+
+7:) Secure Your Database Credentials in .env File
+To avoid exposing sensitive data, you should store your database credentials in a .env file.
+
+Create a .env file in the root directory of your project.
+
+Add your database configuration to the .env file:
+
+DB_HOST=localhost
+DB_USER=articestate
+DB_PASSWORD=12345
+DB_NAME=articestate
+
+Install dotenv to load the environment variables:
+
+$ npm install dotenv
+
+8:) Modify db.js to use the credentials from the .env file:
+
+import mysql from 'mysql2';
+import dotenv from 'dotenv';
+
+dotenv.config(); // Load environment variables
+
+const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
+
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('Database connection failed:', err.message);
+  } else {
+    console.log('Connected to the MySQL database!');
+    connection.release();
+  }
+});
+
+export default db;
+
+
+Now, your credentials are safely stored in the .env file, and the connection code is reading the credentials from it.
+
+9:) Ignore .env in Git
+Make sure to add .env to your .gitignore file to prevent it from being pushed to version control:
+
+.env
+Conclusion:
+With this setup, you've connected to your MySQL database without creating any tables. Your connection is configured, and you can start working with the database once you create tables or perform other queries.
