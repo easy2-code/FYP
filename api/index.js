@@ -1,19 +1,23 @@
 import express from "express";
-import db from "./db.js";
-import User from "./models/user.model.js";
-import userRouter from "./routes/user.route.js";
-
+import "./db.js"; // Database connection
+import syncModels from "./syncModels.js"; // Import syncModels
+import userRouter from "./routes/user.route.js"; // User route
+import authRouter from "./routes/auth.route.js"; // Import the auth routes
 
 const app = express();
 app.use(express.json());
 
-// Sync the database
+// Sync the models before starting the server
 (async () => {
   try {
-    await User.sync(); // This creates the 'User' table if it doesn't exist
-    console.log("User model synced with the database!");
+    await syncModels(); // Sync all models
+    console.log("All models synced successfully!");
   } catch (error) {
-    console.error("Failed to sync the User model:", error.message);
+    console.error(
+      "Model synchronization failed. Server not started.",
+      error.message
+    );
+    process.exit(1); // Exit the process on sync failure
   }
 })();
 
@@ -22,11 +26,14 @@ app.get("/api/db-test", (req, res) => {
   res.send("Connected to the database!");
 });
 
-// Start the server
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!");
-});
-
-
+// Use User routes
 app.use("/api/user", userRouter);
 
+// Use Auth routes for signup
+app.use("/api/auth", authRouter); // Register auth routes for signup
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}!`);
+});

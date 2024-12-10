@@ -380,3 +380,361 @@ Make sure to add .env to your .gitignore file to prevent it from being pushed to
 .env
 Conclusion:
 With this setup, you've connected to your MySQL database without creating any tables. Your connection is configured, and you can start working with the database once you create tables or perform other queries.
+
+==========================================================================
+I create a user model 
+==========================================================================
+1:) To create a user model for MySQL in your project, you can use Sequelize, a popular ORM (Object-Relational Mapping) library for Node.js. It simplifies database operations and allows you to define models similarly to how you define schemas in Mongoose.
+
+Here’s how you can do it:
+
+2:) Install Sequelize and MySQL2
+Run the following command in your project root to install Sequelize and MySQL2:
+
+$ npm install sequelize mysql2
+
+3:)Set Up Sequelize
+In your api folder, create a new file named sequelize.js to configure Sequelize and connect it to your MySQL database.
+
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
+
+// Initialize Sequelize
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
+  dialect: "mysql",
+});
+
+// Test the connection
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Connected to the MySQL database!");
+  } catch (error) {
+    console.error("Unable to connect to the database:", error.message);
+  }
+})();
+
+export default sequelize;
+
+
+4:) Create the Models Folder
+Inside your api folder, create a folder named models. Then, create a file named user.model.js for your user model. models/user.model.js
+
+import { DataTypes } from "sequelize";
+import sequelize from "../sequelize.js";
+
+const User = sequelize.define("User", {
+  username: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+}, {
+  timestamps: true, // Automatically adds createdAt and updatedAt columns
+});
+
+export default User;
+
+5:) Sync the Model with the Database
+To ensure the User table is created in the database, you need to sync the model.
+
+Update index.js
+In your index.js file, import the User model and sync it with the database.
+
+import express from "express";
+import "./db.js"; // Database connection
+import User from "./models/user.model.js"; // User model
+
+const app = express();
+app.use(express.json());
+
+// Sync the database
+(async () => {
+  try {
+    await User.sync(); // This creates the 'User' table if it doesn't exist
+    console.log("User model synced with the database!");
+  } catch (error) {
+    console.error("Failed to sync the User model:", error.message);
+  }
+})();
+
+// Test Route
+app.get("/api/db-test", (req, res) => {
+  res.send("Connected to the database!");
+});
+
+// Start the server
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!");
+});
+
+Key Features of This Setup:
+Automatic Table Creation: User.sync() will create the User table based on your model if it doesn’t exist.
+Schema Validation: Sequelize validates data types and constraints.
+Timestamps: The timestamps: true option automatically adds createdAt and updatedAt fields.
+Next Steps
+Once the User model is set up and synced with your database, you can:
+
+Add CRUD (Create, Read, Update, Delete) routes for user management.
+Hash user passwords using libraries like bcrypt before saving them.
+Implement authentication features like login and registration.
+
+
+==========================================================================
+I create a test api route
+==========================================================================
+1:) First i go to index.js which is in api folder in which i write some code:
+
+app.get('/test', (req, res) => {
+  res.json({
+    message: "Hello World...",
+  });
+});
+
+2:) go to chrome and search localhost:3000/test you will see this:
+{"message":"Hello Wordl..."}
+
+3:) But this is not the best practice for creating api route because we can not create all api like for SingIn, SignUp everything in index.js so this will be so long file if we do like this. so best practice to create a separate file for it and a separate file for this function: 
+
+app.get('/test', (req, res) => {
+  res.json({
+    message: "Api route is working...",
+  });
+};
+);
+
+4:) Create another folder in api folder name is routes. in which create a user.route.js file
+
+5:) in user.route.js write the code:
+
+import express from 'express';
+const router = express.Router();
+
+router.get('/test', (req,res)=>{
+  res.json({
+    message: "Hello World..",
+  });
+});
+
+6:) in index.js modify the code:
+
+instead of this: 
+app.get('/test', (req,res)=>{
+  res.json({
+    message: "Hello World..",
+  });
+});
+
+write this:
+app.use("/api/user", userRouter);
+
+7:) also import this at the top in index.js:
+import userRouter from "./routes/user.route.js";
+
+8:) export it at the end in user.route.js
+export default router;
+
+9:) writing like this is not best practice in user.route.js: 
+
+import express from "express";
+
+const router = express.Router();
+router.get("/test", (req, res) => {
+  res.json({
+    message: "Api route is working...",
+  });
+});
+
+export default router;
+
+we need to write it in a separate file for that we create another folder controllers in api:
+(req, res) => {
+  res.json({
+    message: "Api route is working...",
+  });
+}
+
+10:) Create controllers folder in api and create user.controller.js file in which write this code:
+export const test = (req, res) => {
+  res.json({
+    message: "Api route is working...",
+  });
+};
+
+11:) modify the user.route.js file:
+
+import express from "express";
+import { test } from "../controllers/user.controller.js";
+
+const router = express.Router();
+router.get("/test", test);
+
+export default router;
+
+==========================================================================
+I create a sign up API route
+==========================================================================
+1:) Create auth.controller.js file in controllers folder and write this code:
+
+import User from "../models/user.model.js"; // Import the User model
+import bcrypt from "bcryptjs"; // Use bcryptjs instead of bcrypt
+
+export const signup = async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    // 1. Validate the input
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // 2. Check if the email already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email is already in use" });
+    }
+
+    // 3. Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 4. Create the user in the database
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    // 5. Respond with the newly created user (excluding the password)
+    res.status(201).json({
+      message: "User created successfully!",
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error during signup:", error.message);
+    res.status(500).json({ message: "An error occurred during sign-up" });
+  }
+};
+
+
+but you need to install one in the root folder:
+
+$ npm install bcryptjs
+
+2:) Create auth.route.js file in the routes folder and write the code:
+
+import express from "express";
+import { signup } from "../controllers/auth.controller.js"; // Import signup controller
+
+const router = express.Router();
+
+// POST /api/auth/signup
+router.post("/signup", signup);
+
+export default router;
+
+
+3:) Create syncModels.js file in api folder and write the code:
+
+import User from "./models/user.model.js";
+
+const syncModels = async () => {
+  try {
+    await User.sync(); // Sync the 'User' table
+    console.log("User model synced with the database!");
+  } catch (error) {
+    console.error("Failed to sync the User model:", error.message);
+    throw error; // Throw error to prevent server start if sync fails
+  }
+};
+
+export default syncModels;
+
+4:) Update the index.js file
+
+import express from "express";
+import "./db.js"; // Database connection
+import syncModels from "./syncModels.js"; // Import syncModels
+import userRouter from "./routes/user.route.js"; // User route
+import authRouter from "./routes/auth.route.js"; // Import the auth routes
+
+const app = express();
+app.use(express.json());
+
+// Sync the models before starting the server
+(async () => {
+  try {
+    await syncModels(); // Sync all models
+    console.log("All models synced successfully!");
+  } catch (error) {
+    console.error(
+      "Model synchronization failed. Server not started.",
+      error.message
+    );
+    process.exit(1); // Exit the process on sync failure
+  }
+})();
+
+// Test Route
+app.get("/api/db-test", (req, res) => {
+  res.send("Connected to the database!");
+});
+
+// Use User routes
+app.use("/api/user", userRouter);
+
+// Use Auth routes for signup
+app.use("/api/auth", authRouter); // Register auth routes for signup
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}!`);
+});
+
+5:) Open insomnia and click on home button then click on Create and then create a request collection
+
+Request collection: articestate
+
+click on + icon to create a HTTP Request 
+
+HTTP Request: sign up
+ 
+6:) Testing the Sign-Up API
+
+POST http://localhost:3000/api/auth/signup
+
+Click on Body JSON
+
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "SecurePassword123"
+}
+
+7:) Now send the request and you will get the response like this:
+
+{
+  "message": "User created successfully!",
+  "user": {
+    "id": 1,
+    "username": "johndoe",
+    "email": "john@example.com"
+  }
+}
