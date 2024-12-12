@@ -4,7 +4,7 @@
 10/12/2024 - Create and run the server 
 10/12/2024 - Connect to database 
 10/12/2024 - Create user model
-Create a test api route
+10/12/2024 - Create a test api route
 Create sign up API route
 Create a middleware and a function to handle possible errors
 Complete sign up page Ul
