@@ -1,12 +1,12 @@
 10/12/2024 - Install React js and Tailwind CSS and create the first template
 10/12/2024 - Create pages and routes
-10/12/2024 - Create Header component 
-10/12/2024 - Create and run the server 
-10/12/2024 - Connect to database 
+10/12/2024 - Create Header component
+10/12/2024 - Create and run the server
+10/12/2024 - Connect to database
 10/12/2024 - Create user model
 10/12/2024 - Create a test api route
-Create sign up API route
-Create a middleware and a function to handle possible errors
+14/12/2024 - Create sign up API route
+14/12/2024 - Create a middleware and a function to handle possible errors
 Complete sign up page Ul
 Complete sign up page functionality
 Create sign in API route

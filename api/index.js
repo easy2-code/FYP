@@ -2,9 +2,7 @@ import express from "express";
 import "./db.js"; // Database connection
 import User from "./models/user.model.js"; // User model
 import userRouter from "./routes/user.route.js";
-
-const app = express();
-app.use(express.json());
+import authRouter from "./routes/auth.route.js";
 
 // Sync the database
 (async () => {
@@ -21,6 +19,9 @@ app.get("/api/db-test", (req, res) => {
   res.send("Connected to the database!");
 });
 
+const app = express();
+app.use(express.json());
+
 // Start the server
 app.listen(3000, () => {
   console.log("Server is running on port 3000!");
@@ -28,3 +29,14 @@ app.listen(3000, () => {
 
 //Test api route
 app.use("/api/user", userRouter);
+app.use("/api/auth", authRouter);
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  return res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message,
+  });
+});
