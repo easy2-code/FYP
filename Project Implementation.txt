@@ -1475,6 +1475,3 @@ Key Changes:
 Expected Behavior:
 1: The "Connected to the MySQL database!" and "User model synced with the database!" messages will only appear once, during the first connection attempt in sequelize.js.
 2: The server log ("Server is running on port 3000!") will appear once when the Express app starts.
-
-
- Complete sign up page Ul and Complete sign up page functionality
