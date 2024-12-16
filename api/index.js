@@ -1,36 +1,24 @@
+// index.js
 import express from "express";
-import "./db.js"; // Database connection
-import User from "./models/user.model.js"; // User model
+import "./sequelize.js"; // This will handle the database connection and sync
+import User from "./models/user.model.js"; // User model (already synced in sequelize.js)
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
 
-// Sync the database
-(async () => {
-  try {
-    await User.sync(); // This creates the 'User' table if it doesn't exist
-    console.log("User model synced with the database!");
-  } catch (error) {
-    console.error("Failed to sync the User model:", error.message);
-  }
-})();
+const app = express(); // Initialize app
+app.use(express.json()); // Middleware to parse JSON
 
-// Test Route
+// Test Route (Must come AFTER app initialization)
 app.get("/api/db-test", (req, res) => {
   res.send("Connected to the database!");
 });
 
-const app = express();
-app.use(express.json());
-
-// Start the server
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!");
-});
-
-//Test api route
+// Test API route
 app.use("/api/user", userRouter);
+// Auth route
 app.use("/api/auth", authRouter);
 
+// Middleware for error handling
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
@@ -39,4 +27,9 @@ app.use((err, req, res, next) => {
     statusCode,
     message,
   });
+});
+
+// Start the server and only log once
+app.listen(3000, () => {
+  console.log("Server is running on port 3000!");
 });

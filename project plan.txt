@@ -7,8 +7,8 @@
 10/12/2024 - Create a test api route
 14/12/2024 - Create sign up API route
 14/12/2024 - Create a middleware and a function to handle possible errors
-Complete sign up page Ul
-Complete sign up page functionality
+16/12/2024 - Complete sign up page Ul
+16/12/2024 - Complete sign up page functionality
 Create sign in API route
 Complete sign in page functionality
 Add redux toolkit
