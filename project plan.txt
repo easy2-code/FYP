@@ -41,4 +41,3 @@ Create the listing item component and show listings
 Add show more listings functionality
 Complete home page
 Complete about page
-Deploy to render
