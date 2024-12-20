@@ -22,6 +22,28 @@ export default function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Check if all fields are filled
+    if (!formData.username || !formData.email || !formData.password) {
+      setError("All fields are required.");
+      return;
+    }
+
+    // Password strength validation
+    const password = formData.password;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      setError(
+        "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
+      );
+      return;
+    }
+
+    // Clear error if validation succeeds
+    setError(null);
+
     try {
       setLoading(true);
       const res = await fetch("/api/auth/signup", {
