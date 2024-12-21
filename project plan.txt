@@ -11,7 +11,7 @@
 16/12/2024 - Complete sign up page functionality
 20/12/2024 - Create sign in API route
 20/12/2024 - Complete sign in page functionality
-Add redux toolkit
+21/12/2024 - Add redux toolkit
 Add redux persist
 Add Google OAuth functionality
 Update the header and make the profile page private

@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from "../redux/user/userSlice";
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const { loading, error } = useSelector((state) => state.user);
   const [validationError, setValidationError] = useState(null); // State for validation error message
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -25,9 +31,9 @@ export default function SignIn() {
     e.preventDefault();
 
     // If there's already an error, do not continue with form submission
-    if (error) {
-      setError(null); // Clear error to allow a new submission attempt
-    }
+    // if (error) {
+    //   setError(null); // Clear error to allow a new submission attempt
+    // }
 
     // Validate required fields
     if (!formData.email || !formData.password) {
@@ -36,8 +42,8 @@ export default function SignIn() {
     }
 
     try {
-      setLoading(true);
-      setError(null); // Clear previous errors before submission
+      dispatch(signInStart());
+      // setError(null); // Clear previous errors before submission
 
       const response = await fetch("/api/auth/signin", {
         method: "POST",
@@ -48,18 +54,16 @@ export default function SignIn() {
       });
 
       const data = await response.json();
-
+      console.log(data);
       if (data.success === false) {
-        setError(data.message); // Show "User not found!" or other error messages
-        setLoading(false);
+        dispatch(signInFailure(data.message));
         return;
       }
 
-      setLoading(false);
+      dispatch(signInSuccess(data));
       navigate("/"); // Navigate to home page on successful sign-in
     } catch (error) {
-      setLoading(false);
-      setError(error.message); // Handle other unexpected errors (e.g., network issues)
+      dispatch(signInFailure(error.message)); // Handle other unexpected errors (e.g., network issues)
     }
   };
 
@@ -102,7 +106,7 @@ export default function SignIn() {
         </button>
       </form>
       <div className="flex gap-2 mt-5">
-        <p>Don't have an account?</p>
+        <p>Dont have an account?</p>
         <Link to={"/sign-up"}>
           <span className="text-blue-700">Sign up</span>
         </Link>

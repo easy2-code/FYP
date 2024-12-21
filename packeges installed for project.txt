@@ -16,3 +16,4 @@ FYP folder
 14:) npm install sequelize mysql2 [in FYP folder]
 15:) npm install bcryptjs [in FYP folder]
 16:) npm i jsonwebtoken [in FYP folder]
+17:) npm install @reduxjs/toolkit react-redux [in FYP folder]
