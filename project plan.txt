@@ -9,8 +9,8 @@
 14/12/2024 - Create a middleware and a function to handle possible errors
 16/12/2024 - Complete sign up page Ul
 16/12/2024 - Complete sign up page functionality
-20/12/2024 - Create sign in API route
-20/12/2024 - Complete sign in page functionality
+Create sign in API route
+Complete sign in page functionality
 Add redux toolkit
 Add redux persist
 Add Google OAuth functionality
