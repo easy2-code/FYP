@@ -2215,3 +2215,57 @@ export default function SignIn() {
     </div>
   );
 }
+
+
+==========================================================================
+Add redux persist
+==========================================================================
+
+1:) npm i redux-persist
+
+2:) make changes in store.js so the final code will be this 
+
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import userReducer from './user/userSlice';
+import { persistReducer, persistStore } from "redux-persist";
+import storage from  "redux-persist/lib/storage";
+
+
+const rootReducer = combineReducers({user:userReducer})
+
+const persistConfig = {
+  key:"root",
+  storage,
+  version:1,
+}
+
+const persistedReducer = persistReducer(persistConfig , rootReducer)
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+    serializableCheck: false,
+  }),
+});
+
+export const persistor = persistStore(store);
+
+3:) now make changes in main.jsx file so the code will be this 
+
+// eslint-disable-next-line no-unused-vars
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App.jsx";
+import { persistor, store } from "./redux/store.js";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <Provider store={store}>
+    <PersistGate loading={null} persistor={persistor}>
+      <App />
+    </PersistGate>
+  </Provider>
+);
+

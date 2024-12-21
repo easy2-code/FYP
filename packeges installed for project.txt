@@ -17,3 +17,4 @@ FYP folder
 15:) npm install bcryptjs [in FYP folder]
 16:) npm i jsonwebtoken [in FYP folder]
 17:) npm install @reduxjs/toolkit react-redux [in FYP folder]
+18:) npm i redux-persist [in FYP folder]
