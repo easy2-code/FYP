@@ -1,4 +1,5 @@
-FYP folder
+
+Packages installed for project..
 ============================================
 1:) npm create vite@latest project
 2:) cd project
@@ -16,5 +17,5 @@ FYP folder
 14:) npm install sequelize mysql2 [in FYP folder]
 15:) npm install bcryptjs [in FYP folder]
 16:) npm i jsonwebtoken [in FYP folder]
-17:) npm install @reduxjs/toolkit react-redux [in FYP folder]
-18:) npm i redux-persist [in FYP folder]
+17:) npm install @reduxjs/toolkit react-redux [in project folder]
+18:) npm i redux-persist [in project folder]
