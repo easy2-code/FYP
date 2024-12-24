@@ -2025,24 +2025,39 @@ export default function SignUp() {
 Add redux toolkit
 ==========================================================================
 
-1:) create "redux" folder in src folder and then create store.js file inside it and write this code.
+1:) First we need to install redux toolkit in our project folder
 
-2:) now update main.jsx file to use store and provider.
+$ npm install @reduxjs/toolkit react-redux
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App.jsx';
+2:) Create another folder in src name is "redux" inside in redux create a file name is "store.js" and write this code:
+
+import { configureStore } from "@reduxjs/toolkit";
+
+export const store = configureStore({
+  reducer: {},
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+});
+
+3:) Go to main.jsx and update it:
+
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.jsx";
 import { store } from "./redux/store.js";
 import { Provider } from "react-redux";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <App />
-  </Provider>,
-)
+  </Provider>
+);
 
-3:) now create userSlice.js file in user folder which is present in redux folder and add this code to it 
+
+4:) Create another folder in redux name is "user" and in user folder create a file name is "userSlice.js" and write this code:
 
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -2075,10 +2090,11 @@ export const { signInStart, signInSuccess, signInFailure } = userSlice.actions;
 
 export default userSlice.reducer;
 
-4:) now update store.js file to this 
+5:) Add slice reducer to the store we need to go to store.js and write this code:
 
 import { configureStore } from "@reduxjs/toolkit";
-import { userReducer } from "./user/userSlice";
+import userReducer from "./user/userSlice";
+
 export const store = configureStore({
   reducer: { user: userReducer },
   middleware: (getDefaultMiddleware) =>
@@ -2087,11 +2103,10 @@ export const store = configureStore({
     }),
 });
 
-5:) Add Redux developer toolkit to chrome extension.
+6:) Go to SigIn.jsx and write this code:
 
-6:) Your final Signin page will have this code 
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -2105,8 +2120,8 @@ export default function SignIn() {
   const { loading, error } = useSelector((state) => state.user);
   const [validationError, setValidationError] = useState(null); // State for validation error message
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
+  const dispatch = useDispatch();
   // Handle form input changes
   const handleChange = (e) => {
     setFormData({
@@ -2124,9 +2139,9 @@ export default function SignIn() {
     e.preventDefault();
 
     // If there's already an error, do not continue with form submission
-    // if (error) {
-    //   setError(null); // Clear error to allow a new submission attempt
-    // }
+    if (error) {
+      setError(null); // Clear error to allow a new submission attempt
+    }
 
     // Validate required fields
     if (!formData.email || !formData.password) {
@@ -2135,8 +2150,8 @@ export default function SignIn() {
     }
 
     try {
+      // setLoading(true);
       dispatch(signInStart());
-      // setError(null); // Clear previous errors before submission
 
       const response = await fetch("/api/auth/signin", {
         method: "POST",
@@ -2147,16 +2162,15 @@ export default function SignIn() {
       });
 
       const data = await response.json();
-      console.log(data);
+
       if (data.success === false) {
         dispatch(signInFailure(data.message));
         return;
       }
-
       dispatch(signInSuccess(data));
       navigate("/"); // Navigate to home page on successful sign-in
     } catch (error) {
-      dispatch(signInFailure(error.message)); // Handle other unexpected errors (e.g., network issues)
+      dispatch(signInFailure(error.message));
     }
   };
 
@@ -2199,7 +2213,7 @@ export default function SignIn() {
         </button>
       </form>
       <div className="flex gap-2 mt-5">
-        <p>Dont have an account?</p>
+        <p>Don't have an account?</p>
         <Link to={"/sign-up"}>
           <span className="text-blue-700">Sign up</span>
         </Link>
@@ -2216,52 +2230,53 @@ export default function SignIn() {
   );
 }
 
+7:) Now go to chrome and add this Redux DevTools and test the sigin page...
 
 ==========================================================================
 Add redux persist
 ==========================================================================
+1:) When user refresh the page the user lose the data so each time when user refresh the page user need to sigin again and again. so we need to fix it by storing the data in local database so for that we need to install a packege project folder
 
-1:) npm i redux-persist
+$ npm i redux-persist
 
 2:) make changes in store.js so the final code will be this 
 
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import userReducer from './user/userSlice';
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import userReducer from "./user/userSlice";
 import { persistReducer, persistStore } from "redux-persist";
-import storage from  "redux-persist/lib/storage";
+import storage from "redux-persist/lib/storage";
 
-
-const rootReducer = combineReducers({user:userReducer})
+const rootReducer = combineReducers({ user: userReducer });
 
 const persistConfig = {
-  key:"root",
+  key: "root",
   storage,
-  version:1,
-}
+  version: 1,
+};
 
-const persistedReducer = persistReducer(persistConfig , rootReducer)
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-    serializableCheck: false,
-  }),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });
 
 export const persistor = persistStore(store);
 
 3:) now make changes in main.jsx file so the code will be this 
 
-// eslint-disable-next-line no-unused-vars
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import { persistor, store } from "./redux/store.js";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+createRoot(document.getElementById("root")).render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
       <App />
@@ -2269,3 +2284,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </Provider>
 );
 
+
+==========================================================================
+Add Google OAuth functionality
+==========================================================================
