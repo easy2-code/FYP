@@ -2288,3 +2288,615 @@ createRoot(document.getElementById("root")).render(
 ==========================================================================
 Add Google OAuth functionality
 ==========================================================================
+1:) Go to project src folder and in components createa a OAuth.jsx file and write this code:
+
+import React from "react";
+
+export default function OAuth() {
+  return <div>OAuth</div>;
+}
+
+2:) Go to SignIn.jsx to add this component.
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+} from "../redux/user/userSlice";
+import OAuth from "../components/OAuth";
+
+export default function SignIn() {
+  const [formData, setFormData] = useState({});
+  const { loading, error } = useSelector((state) => state.user);
+  const [validationError, setValidationError] = useState(null); // State for validation error message
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+
+    // Clear validation error when the user starts typing
+    if (validationError && e.target.value) {
+      setValidationError(null);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // If there's already an error, do not continue with form submission
+    // if (error) {
+    //   setError(null); // Clear error to allow a new submission attempt
+    // }
+
+    // Validate required fields
+    if (!formData.email || !formData.password) {
+      setValidationError("All fields are required.");
+      return;
+    }
+
+    try {
+      dispatch(signInStart());
+      // setError(null); // Clear previous errors before submission
+
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      console.log(data);
+      if (data.success === false) {
+        dispatch(signInFailure(data.message));
+        return;
+      }
+
+      dispatch(signInSuccess(data));
+      navigate("/"); // Navigate to home page on successful sign-in
+    } catch (error) {
+      dispatch(signInFailure(error.message)); // Handle other unexpected errors (e.g., network issues)
+    }
+  };
+
+  return (
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl text-center font-semibold my-7">Sign In</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input
+          type="email"
+          name="email"
+          id="email"
+          placeholder="Email"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        <input
+          type="password"
+          name="password"
+          id="password"
+          placeholder="Password"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        <button
+          disabled={loading}
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 border-t-2 border-white rounded-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" stroke="none" fill="none" />
+            </svg>
+          ) : (
+            "Sign In"
+          )}
+          {loading && <span>Loading...</span>}
+        </button>
+        {/* Add Google authentication button here  */}
+        <OAuth />
+      </form>
+      <div className="flex gap-2 mt-5">
+        <p>Dont have an account?</p>
+        <Link to={"/sign-up"}>
+          <span className="text-blue-700">Sign up</span>
+        </Link>
+      </div>
+
+      {/* Validation error message for empty fields */}
+      {validationError && !error && (
+        <p className="text-red-500 mt-5">{validationError}</p>
+      )}
+
+      {/* General error message (e.g., User not found) */}
+      {error && <p className="text-red-500 mt-5">{error}</p>}
+    </div>
+  );
+}
+
+3:) Also add to SignUp.jsx
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import OAuth from "../components/OAuth";
+
+export default function SignUp() {
+  // for submitting form data
+  const [formData, setFormData] = useState({});
+  // for errors
+  const [error, setError] = useState(null);
+  // for loading
+  const [loading, setLoading] = useState(false);
+
+  // To redirect to sign in page or show a message after successful user creation
+  const navigate = useNavigate();
+
+  // for submitting form data
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Check if all fields are filled
+    if (!formData.username || !formData.email || !formData.password) {
+      setError("All fields are required.");
+      return;
+    }
+
+    // Password strength validation
+    const password = formData.password;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      setError(
+        "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
+      );
+      return;
+    }
+
+    // Clear error if validation succeeds
+    setError(null);
+
+    try {
+      setLoading(true);
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        setError(data.message);
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      setError(null);
+      navigate("/sign-in");
+    } catch (error) {
+      setLoading(false);
+      setError(error.message);
+    }
+  };
+
+  return (
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl text-center font-semibold my-7">
+        Create an Account
+      </h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input
+          type="text"
+          name="username"
+          id="username"
+          placeholder="Username"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        <input
+          type="email"
+          name="email"
+          id="email"
+          placeholder="Email"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        <input
+          type="password"
+          name="password"
+          id="password"
+          placeholder="Password"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        <button
+          disabled={loading}
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 border-t-2 border-white rounded-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" stroke="none" fill="none" />
+            </svg>
+          ) : (
+            "Sign Up"
+          )}
+          {loading && <span>Loading...</span>}
+        </button>
+        {/* Add Google authentication button here  */}
+        <OAuth />
+      </form>
+      <div className="flex gap-2 mt-5">
+        <p>Have an account?</p>
+        <Link to={"/sign-in"}>
+          <span className="text-blue-700">Sign in</span>
+        </Link>
+      </div>
+      {error && <p className="text-red-500 mt-5">{error}</p>}
+    </div>
+  );
+}
+
+4:) Go to OAuth.jsx and modify it:
+
+import React from "react";
+
+export default function OAuth() {
+  const handleGoogleClick = async () => {
+    try {
+    } catch (error) {
+      console.log("could not continue with google.", error);
+    }
+  };
+  return (
+    <button
+      onClick={handleGoogleClick}
+      type="button"
+      className="bg-red-700 text-white p-3 rounded-lg uppercase hover:opacity-95"
+    >
+      Continue with google
+    </button>
+  );
+}
+
+5:) Go to google and search firebase google and create a project.
+
+  * Click on Get Started
+  * Click on Add project
+  * Enter project name and click on continue = Real Estate
+  * uncheck google analytic for this project
+  * Click on Web </>
+  * App nickname and click on register = Real Estate
+  * Add Firebase SDK to our project
+  * Go to terminal we need to install it in project folder
+
+  $ npm install firebase
+
+  * Then, initialise Firebase and begin using the SDKs for the products that you'd like to use so copy it accordingly.
+
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDwWQyjnW5rDJ4pm-8-7x7kpwck9uZADnI",
+  authDomain: "real-estate-acc25.firebaseapp.com",
+  projectId: "real-estate-acc25",
+  storageBucket: "real-estate-acc25.firebasestorage.app",
+  messagingSenderId: "613100195000",
+  appId: "1:613100195000:web:accf84fe8a35c6bbc8384d"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+  * and then create a file in src folder and name is firebase.js and paste that code inside it.
+
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDwWQyjnW5rDJ4pm-8-7x7kpwck9uZADnI",
+  authDomain: "real-estate-acc25.firebaseapp.com",
+  projectId: "real-estate-acc25",
+  storageBucket: "real-estate-acc25.firebasestorage.app",
+  messagingSenderId: "613100195000",
+  appId: "1:613100195000:web:accf84fe8a35c6bbc8384d",
+};
+
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig);
+
+6:) We need to hide our apiKey..... to secure our project for that we need to create another .env file in project folder. and write this:
+
+VITE_FIREBASE_API_KEY="AIzaSyDwWQyjnW5rDJ4pm-8-7x7kpwck9uZADnI"
+VITE_FIREBASE_AUTH_DOMAIN="real-estate-acc25.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="real-estate-acc25"
+VITE_FIREBASE_STORAGE_BUCKET="real-estate-acc25.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID="613100195000"
+VITE_FIREBASE_APP_ID="1:613100195000:web:accf84fe8a35c6bbc8384d"
+
+
+7:) Update the firebase.js file:
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
+
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig);
+
+
+8:) Then go to firbase goole and click on continue to console
+  * Click on Build
+  * Click on authentication
+  * Clikc on get Started
+  * Click on Google
+  * Click on enable
+  * Public-facing name for project = Real Estate
+  * Support email for project = white........@gmail.com
+  * Click on save
+  * So now we can use it in our project.
+
+9:) Go back to OAuth.jsx and write this code:
+
+import React from "react";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { app } from "../firebase";
+import { useDispatch } from "react-redux";
+import { signInSuccess } from "../redux/user/userSlice";
+
+export default function OAuth() {
+  const dispatch = useDispatch();
+  const handleGoogleClick = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const auth = getAuth(app);
+      const result = await signInWithPopup(auth, provider);
+
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: result.user.displayName,
+          email: result.user.email,
+          photo: result.user.photoURL,
+        }),
+      });
+      const data = await res.json();
+      dispatch(signInSuccess(data));
+    } catch (error) {
+      console.log("could not sign in with google.", error);
+    }
+  };
+  return (
+    <button
+      onClick={handleGoogleClick}
+      type="button"
+      className="bg-red-700 text-white p-3 rounded-lg uppercase hover:opacity-95"
+    >
+      Continue with google
+    </button>
+  );
+}
+
+10:) Go to api and then routes and then open auth.route.js and write this code:
+
+import express from "express";
+import { google, signin, signup } from "../controllers/auth.controller.js";
+
+const router = express.Router();
+
+// POST /api/auth/signup
+router.post("/signup", signup);
+
+// POST /api/auth/signin
+router.post("/signin", signin);
+
+// POST /api/auth/google
+router.post("/google", google);
+
+export default router;
+
+
+11:) Go to auth.controller.js and write this code:
+
+import User from "../models/user.model.js";
+import bcryptjs from "bcryptjs";
+import { errorHandler } from "../utils/error.js";
+import jwt from "jsonwebtoken";
+
+export const signup = async (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  // Check if any field is missing
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    // Check if the username already exists
+    const existingUsername = await User.findOne({ where: { username } });
+    if (existingUsername) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Username already exists" });
+    }
+
+    // Check if the email already exists
+    const existingEmail = await User.findOne({ where: { email } });
+    if (existingEmail) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = bcryptjs.hashSync(password, 10);
+
+    // Create a new user
+    const newUser = new User({ username, email, password: hashedPassword });
+    await newUser.save();
+
+    // Respond with success and include user ID, username, email
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: {
+        id: newUser.id, // Include the user's ID (assuming you're using an auto-increment primary key)
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
+  } catch (error) {
+    // Catch any unexpected errors and send a generic error response
+    next(error);
+  }
+};
+
+export const signin = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user exists
+    const validUser = await User.findOne({ where: { email } });
+    if (!validUser) {
+      return next(errorHandler(404, "User not found!"));
+    }
+
+    // Verify password
+    const validPassword = bcryptjs.compareSync(password, validUser.password);
+    if (!validPassword) {
+      return next(errorHandler(401, "Wrong credentials!"));
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: validUser.id }, process.env.JWT_SECRET);
+    // Send token and user details
+    const { password: pass, ...rest } = validUser.toJSON(); // Exclude password
+    res
+      .cookie("access_token", token, { httpOnly: true })
+      .status(200)
+      .json(rest);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const google = async (req, res, next) => {
+  try {
+    const { email, name, photo } = req.body;
+
+    let user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      const username = `${name.split(" ").join("").toLowerCase()}${Math.random()
+        .toString(36)
+        .slice(-4)}`;
+      const hashedPassword = bcryptjs.hashSync(
+        Math.random().toString(36).slice(-16),
+        10
+      );
+
+      user = await User.create({
+        username,
+        email,
+        password: hashedPassword,
+        avatar: photo,
+      });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    const { password, ...rest } = user.toJSON();
+
+    res
+      .cookie("access_token", token, { httpOnly: true, secure: true })
+      .status(200)
+      .json(rest);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+12:) Also modify user.model.js:
+
+import { DataTypes } from "sequelize";
+import sequelize from "../sequelize.js";
+
+const User = sequelize.define(
+  "User",
+  {
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    avatar: {
+      type: DataTypes.STRING,
+      defaultValue:
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default User;
+
+13:) Test the google authentication button...
