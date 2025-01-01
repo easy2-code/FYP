@@ -2904,3 +2904,121 @@ const User = sequelize.define(
 export default User;
 
 13:) Test the google authentication button...
+
+
+==========================================================================
+Update the header and make the profile page private
+==========================================================================
+
+1) Go to project/Header.jsx file and and some code so the Header.jsx file looks like this 
+
+// for icons
+import { FaSearch } from "react-icons/fa";
+// link is going to bring us from one page to another page without refreshing the page
+import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+
+export default function Header() {
+  const {currentUser} = useSelector(state => state.user)
+  return (
+    // Create Header component start
+    <header className="bg-slate-200 shadow-md">
+      <div className="flex justify-between items-center max-w-6xl mx-auto p-3">
+        {/* logo of our project  start*/}
+        <Link to="/">
+          <h1 className="font-bold text-sm sm:text-xl flex flex-wrap">
+            <span className="text-slate-500">Artic</span>
+            <span className="text-slate-700">Estate</span>
+          </h1>
+        </Link>
+        {/* logo of our project  end*/}
+
+        {/* search bar of header component  start*/}
+        <form className="bg-slate-100 p-3 rounded-lg flex items-center">
+          <input
+            type="text"
+            name="search"
+            id="search"
+            placeholder="search.... "
+            className="bg-transparent focus: outline-none w-24 sm:w-64"
+          />
+          <FaSearch className="text-slate-600" />
+        </form>
+        {/* search bar of header component  end*/}
+
+        {/* Navbars start */}
+        <ul className="flex gap-4 ">
+          <Link to="">
+            <li className="hidden sm:inline text-slate-700 hover:underline">
+              Home
+            </li>
+          </Link>
+          <Link to="/about">
+            <li className="hidden sm:inline text-slate-700 hover:underline">
+              About
+            </li>
+          </Link>
+          <Link to="profile">
+
+          {currentUser ? (
+            <img className="rounded-full h-7 w-7 object" src={currentUser.avatar} alt="profile" />
+          ):(
+          <li className="text-slate-700 hover:underline">Sign in</li>
+          )
+        }
+        </Link>
+        </ul>
+        {/* Navbars end */}
+      </div>
+    </header>
+    // Create Header component start
+  );
+}
+
+
+add code of currentUser and avatar at the bottom and also imports
+
+
+
+2) create PrivateRoute.jsx file in components folder and add this code
+
+in the PrivateRoute.jsx file first write rfc and press enter then make changes in App.jsx after finishing work in routes after that write this code of PrivateRoute.jsx
+
+import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
+
+export default function PrivateRoute() {
+    const {currentUser} = useSelector((state) => state.user)
+  return currentUser ? <Outlet/> : <Navigate to="/sign-in" />
+}
+
+in the PrivateRoute.jsx file first write rfc and press enter then make changes in App.jsx after finishing work in routes after that write the above code of PrivateRoute.jsx
+
+3) now in app.jsx make change to routes and also add import so the code will look like this
+
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import About from "./pages/About";
+import Profile from "./pages/Profile";
+import Header from "./components/Header";
+import PrivateRoute from "./components/Privateroute";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/about" element={<About />} />
+        <Route element={<PrivateRoute />}>
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
