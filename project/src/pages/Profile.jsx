@@ -1,15 +1,29 @@
 import { useSelector } from "react-redux";
+// user click on profile image to upload new image for profile
+import { useRef } from "react";
 
 export default function Profile() {
+  // user click on profile image to upload new image for profile
+  const fileRef = useRef(null); //initiale value should be null
   const { currentUser } = useSelector((state) => state.user);
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
       <form className="flex flex-col gap-4">
+        {/* for uploading images for profile  */}
+        <input
+          type="file"
+          name="profile"
+          id="profile"
+          ref={fileRef}
+          hidden
+          accept="image/*"
+        />
         <img
           src={currentUser.avatar}
           alt="profile"
           className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
+          onClick={() => fileRef.current.click()}
         />
         <input
           type="text"
