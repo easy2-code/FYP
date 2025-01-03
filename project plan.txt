@@ -16,12 +16,12 @@
 31/12/2024 - Add Google OAuth functionality
 1/1/2025 - Update the header and make the profile page private
 1/1/2025 - Complete profile page Ul
-Complete image upload functionality
+3/1/2025 - Complete image upload functionality
 Create update user API route
-Complete update user functionality 
+Complete update user functionality
 Add delete user functionality
 Add sign out user functionality
-Add create listing API route
+Add create listing API route    
 Complete create listing page Ul
 Complete upload listing images functionality 
 Complete create listing page functionality 
