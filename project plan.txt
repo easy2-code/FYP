@@ -17,7 +17,7 @@
 1/1/2025 - Update the header and make the profile page private
 1/1/2025 - Complete profile page Ul
 3/1/2025 - Complete image upload functionality
-Create update user API route
+05/01/2025 - Create update user API route
 Complete update user functionality
 Add delete user functionality
 Add sign out user functionality

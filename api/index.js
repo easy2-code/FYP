@@ -4,6 +4,7 @@ import "./sequelize.js"; // This will handle the database connection and sync
 import User from "./models/user.model.js"; // User model (already synced in sequelize.js)
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
+import cookieParser from "cookie-parser";
 
 const app = express(); // Initialize app
 app.use(express.json()); // Middleware to parse JSON
@@ -12,11 +13,6 @@ app.use(express.json()); // Middleware to parse JSON
 app.get("/api/db-test", (req, res) => {
   res.send("Connected to the database!");
 });
-
-// Test API route
-app.use("/api/user", userRouter);
-// Auth route
-app.use("/api/auth", authRouter);
 
 // Middleware for error handling
 app.use((err, req, res, next) => {
@@ -29,7 +25,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.use(cookieParser());
+
 // Start the server and only log once
 app.listen(3000, () => {
   console.log("Server is running on port 3000!");
 });
+
+// Test API route
+app.use("/api/user", userRouter);
+// Auth route
+app.use("/api/auth", authRouter);
