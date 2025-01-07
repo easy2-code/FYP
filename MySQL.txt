@@ -14,7 +14,7 @@
     );
 
 
-3:) In articestate we create another table name is PROPERTY in which we will store id, title, description, price, type, location, longitue, latitude, owner id, status,
+3:) In articestate we create another table name is PROPERTY in which we will store id, title, description, price, type, location, longitue, latitude, owner id, status, 
 
     => CREATE TABLE PROPERTY (
     id INT AUTO_INCREMENT PRIMARY KEY,

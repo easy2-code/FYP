@@ -1,29 +1,30 @@
-import { useSelector } from "react-redux";
-// user click on profile image to upload new image for profile
+import { useSelector, useDispatch } from "react-redux";
 import { useRef, useState, useEffect } from "react";
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+} from "../redux/user/userSlice";
+import { app } from "../firebase";
 import {
   getDownloadURL,
   getStorage,
   ref,
   uploadBytesResumable,
 } from "firebase/storage";
-import { app } from "../firebase";
 
 export default function Profile() {
-  // user click on profile image to upload new image for profile
-  const fileRef = useRef(null); //initiale value should be null
-  const { currentUser } = useSelector((state) => state.user);
+  const fileRef = useRef(null);
+  const { currentUser } = useSelector((state) => state.user); // Access current user from Redux state
+  const dispatch = useDispatch();
+
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
-
+  const [showProgress, setShowProgress] = useState(false);
   const [formData, setFormData] = useState({});
-
-  // firebase storage
-  // allow read;
-  // allow write: if
-  // request.resource.size < 2 * 1024 * 1024 &&
-  // request.resource.contentType.matches("image/.*")
+  const [message, setMessage] = useState(""); // New state to hold the success message
+  const [loading, setLoading] = useState(false); // State to track loading status
 
   useEffect(() => {
     if (file) {
@@ -32,6 +33,7 @@ export default function Profile() {
   }, [file]);
 
   const handleFileUpload = (file) => {
+    setShowProgress(true);
     const storage = getStorage(app);
     const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
@@ -42,24 +44,70 @@ export default function Profile() {
       (snapshot) => {
         const progress =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setFilePerc(Math.round(progress));
-        // console.log("Upload is " + progress + "% done");
+        setTimeout(() => {
+          setFilePerc(Math.round(progress));
+        }, 300);
       },
       (error) => {
         setFileUploadError(true);
+        setShowProgress(false);
       },
       () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) =>
-          setFormData({ ...formData, avatar: downloadURL })
-        );
+        setTimeout(() => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setFormData({ ...formData, avatar: downloadURL });
+            setShowProgress(false);
+            setFilePerc(0);
+          });
+        }, 500);
       }
     );
   };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); // Set loading to true when form is submitted
+
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        setLoading(false); // Stop loading on failure
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setMessage("Profile Updated Successfully");
+
+      // Set a timeout to hide the message after 3 seconds
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+
+      setLoading(false); // Stop loading after the success
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setLoading(false); // Stop loading on error
+    }
+  };
+
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
-      <form className="flex flex-col gap-4">
-        {/* for uploading images for profile  */}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           onChange={(e) => setFile(e.target.files[0])}
           type="file"
@@ -75,39 +123,72 @@ export default function Profile() {
           className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
           onClick={() => fileRef.current.click()}
         />
-        <p className="text-sm self-center">
-          {fileUploadError ? (
-            <span className="text-red-700">
-              Error Image Upload (image must be less than 2 mb)
-            </span>
-          ) : filePerc > 0 && filePerc < 100 ? (
-            <span className="text-slate-700">{"Uploading ${filePerc}"}</span>
-          ) : filePerc === 100 ? (
-            <span className="text-green-700">Image Successfully Uploaded!</span>
-          ) : (
-            ""
-          )}
-        </p>
+
+        {showProgress && (
+          <>
+            <div className="relative mt-2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="absolute h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${filePerc}%` }}
+              ></div>
+            </div>
+            <p className="text-sm self-center mt-1 text-gray-600">
+              Uploading {filePerc}%...
+            </p>
+          </>
+        )}
+        {fileUploadError && (
+          <p className="text-sm self-center mt-1 text-red-700">
+            Error: Image upload failed (image must be less than 2 MB).
+          </p>
+        )}
+        {!fileUploadError && filePerc === 100 && (
+          <p className="text-sm self-center mt-1 text-green-700">
+            Image Successfully Uploaded!
+          </p>
+        )}
+
         <input
           type="text"
-          placeholder="username"
+          placeholder="Username"
           id="username"
           className="border p-3 rounded-lg"
+          defaultValue={currentUser.username}
+          onChange={handleChange}
         />
         <input
           type="email"
-          placeholder="email"
+          placeholder="Email"
           id="email"
           className="border p-3 rounded-lg"
+          defaultValue={currentUser.email}
+          onChange={handleChange}
         />
         <input
-          type="text"
-          placeholder="password"
+          type="password"
+          placeholder="Password"
           id="password"
           className="border p-3 rounded-lg"
+          onChange={handleChange}
         />
-        <button className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80">
-          update profile
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 border-t-2 border-white rounded-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" stroke="none" fill="none" />
+            </svg>
+          ) : (
+            "Update Profile"
+          )}
+          {loading && <span>Loading...</span>}
         </button>
       </form>
 
@@ -115,7 +196,11 @@ export default function Profile() {
         <span className="text-red-700 cursor-pointer">Delete Account</span>
         <span className="text-red-700 cursor-pointer">Sign out</span>
       </div>
+
+      {/* Success message */}
+      {message && (
+        <div className="text-green-700 py-7 rounded-lg">{message}</div>
+      )}
     </div>
   );
 }
-

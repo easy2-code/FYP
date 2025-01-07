@@ -1,5 +1,6 @@
 import bcryptjs from "bcryptjs";
 import User from "../models/user.model.js";
+import { errorHandler } from "../utils/error.js";
 
 export const test = (req, res) => {
   res.json({
@@ -8,28 +9,37 @@ export const test = (req, res) => {
 };
 
 export const updateUser = async (req, res, next) => {
-  if (req.user.id !== req.params.id)
-    return next(errorHandler(401, "You can only update your own account! "));
+  if (req.user.id !== parseInt(req.params.id, 10)) {
+    return next(errorHandler(401, "You can only update your own account!"));
+  }
+
   try {
+    // Hash password if provided
     if (req.body.password) {
       req.body.password = bcryptjs.hashSync(req.body.password, 10);
     }
 
-    const updateUser = await User.findByIdAndUpdate(
-      req.params.id,
+    // Find and update the user in MySQL using Sequelize
+    const [updatedRowsCount] = await User.update(
       {
-        $set: {
-          username: req.body.username,
-          email: req.body.email,
-          password: req.body.password,
-          avatar: req.body.avatar,
-        },
+        username: req.body.username,
+        email: req.body.email,
+        password: req.body.password,
+        avatar: req.body.avatar, // For profile pictures (if applicable)
       },
-      { new: true }
+      { where: { id: req.params.id } }
     );
 
-    const { password, ...rest } = updateUser._doc;
-    res.status(200).json(rest);
+    if (updatedRowsCount === 0) {
+      return next(errorHandler(404, "User not found or no changes made!"));
+    }
+
+    // Fetch the updated user
+    const updatedUser = await User.findByPk(req.params.id, {
+      attributes: { exclude: ["password"] }, // Exclude the password from response
+    });
+
+    res.status(200).json(updatedUser);
   } catch (error) {
     next(error);
   }

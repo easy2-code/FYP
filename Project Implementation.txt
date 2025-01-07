@@ -1926,7 +1926,7 @@ export default function SignUp() {
     // Password strength validation
     const password = formData.password;
     const passwordRegex =
-      /^(?=.[a-z])(?=.[A-Z])(?=.\d)(?=.[@$!%?&])[A-Za-z\d@$!%?&]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     if (!passwordRegex.test(password)) {
       setError(
@@ -2283,7 +2283,6 @@ createRoot(document.getElementById("root")).render(
     </PersistGate>
   </Provider>
 );
-
 
 ==========================================================================
 Add Google OAuth functionality
@@ -2975,11 +2974,6 @@ export default function Header() {
   );
 }
 
-
-add code of currentUser and avatar at the bottom and also imports
-
-
-
 2) create PrivateRoute.jsx file in components folder and add this code
 
 in the PrivateRoute.jsx file first write rfc and press enter then make changes in App.jsx after finishing work in routes after that write this code of PrivateRoute.jsx
@@ -2991,8 +2985,6 @@ export default function PrivateRoute() {
     const {currentUser} = useSelector((state) => state.user)
   return currentUser ? <Outlet/> : <Navigate to="/sign-in" />
 }
-
-in the PrivateRoute.jsx file first write rfc and press enter then make changes in App.jsx after finishing work in routes after that write the above code of PrivateRoute.jsx
 
 3) now in app.jsx make change to routes and also add import so the code will look like this
 
@@ -3072,89 +3064,9 @@ export default function Profile() {
   );
 }
 
---------------------------------------------------------------------------------------------------
 ==========================================================================
 Complete image upload functionality
 ==========================================================================
-1:) Open Profile.jsx and write this code: 
-
-import { useSelector } from "react-redux";
-// user click on profile image to upload new image for profile
-import { useRef } from "react";
-
-export default function Profile() {
-  // user click on profile image to upload new image for profile
-  const fileRef = useRef(null); //initiale value should be null
-  const { currentUser } = useSelector((state) => state.user);
-  return (
-    <div className="p-3 max-w-lg mx-auto">
-      <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
-      <form className="flex flex-col gap-4">
-        {/* for uploading images for profile  */}
-        <input
-          type="file"
-          name="profile"
-          id="profile"
-          ref={fileRef}
-          hidden
-          accept="image/*"
-        />
-        <img
-          src={currentUser.avatar}
-          alt="profile"
-          className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
-          onClick={() => fileRef.current.click()}
-        />
-        <input
-          type="text"
-          placeholder="username"
-          id="username"
-          className="border p-3 rounded-lg"
-        />
-        <input
-          type="email"
-          placeholder="email"
-          id="email"
-          className="border p-3 rounded-lg"
-        />
-        <input
-          type="text"
-          placeholder="password"
-          id="password"
-          className="border p-3 rounded-lg"
-        />
-        <button className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80">
-          update profile
-        </button>
-      </form>
-
-      <div className="flex justify-between mt-5">
-        <span className="text-red-700 cursor-pointer">Delete Account</span>
-        <span className="text-red-700 cursor-pointer">Sign out</span>
-      </div>
-    </div>
-  );
-}
-
-
-2:) Then go to firbase account in order to protect our database for that we need to set some rules so user can not upload any other things accept images.
-
-  * Go to firabase account = Real Estate
-  * Click on Build
-  * Click on storage
-  * Click on get Started
-  * Start in production mode and click on next
-  *
-
-  3:47:25
---------------------------------------------------------------------------------------------------------
-
- NOW I START THE IMAGE UPLOAD FUNCTIONALITY BECAUSE OF FIREBASE
-
-==========================================================================
-Complete image upload functionality
-==========================================================================
-
 1) In profile.jsx file add some code so it will look like this(also while adding the code to profile.jsx file we have to create storage in firebase project which will be explain in 2nd point)
 
 import { useSelector } from "react-redux";
@@ -3330,26 +3242,226 @@ VITE_FIREBASE_MESSAGING_SENDER_ID="941477091473",
 # VITE_FIREBASE_APP_ID="1:485281251758:web:50c17b24b9f5547876c83f"
 VITE_FIREBASE_APP_ID="1:941477091473:web:6d22a229aeb154b4874730"
 
+
+5:) Add one more thing add animation while uploading profile image..
+
+write this code in Profile.jsx file:
+
+import { useSelector } from "react-redux";
+import { useRef, useState, useEffect } from "react";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
+
+export default function Profile() {
+  const fileRef = useRef(null); // Initial value should be null
+  const { currentUser } = useSelector((state) => state.user);
+  const [file, setFile] = useState(undefined);
+  const [filePerc, setFilePerc] = useState(0);
+  const [fileUploadError, setFileUploadError] = useState(false);
+  const [showProgress, setShowProgress] = useState(false); // To control visibility of progress
+  const [formData, setFormData] = useState({});
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload(file);
+    }
+  }, [file]);
+
+  const handleFileUpload = (file) => {
+    setShowProgress(true); // Show progress bar when upload starts
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
+        // Simulate a slower progression with setTimeout
+        setTimeout(() => {
+          setFilePerc(Math.round(progress));
+        }, 300); // Add a 300ms delay for smoother progression
+      },
+      (error) => {
+        setFileUploadError(true);
+        setShowProgress(false); // Hide progress bar on error
+      },
+      () => {
+        setTimeout(() => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setFormData({ ...formData, avatar: downloadURL });
+            setShowProgress(false); // Hide progress bar after success
+            setFilePerc(0); // Reset progress percentage
+          });
+        }, 500); // Add a slight delay to keep the success message visible
+      }
+    );
+  };
+
+  return (
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
+      <form className="flex flex-col gap-4">
+        {/* Input for uploading profile image */}
+        <input
+          onChange={(e) => setFile(e.target.files[0])}
+          type="file"
+          name="profile"
+          id="profile"
+          ref={fileRef}
+          hidden
+          accept="image/*"
+        />
+        <img
+          src={formData.avatar || currentUser.avatar}
+          alt="profile"
+          className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
+          onClick={() => fileRef.current.click()}
+        />
+
+        {/* Display upload progress */}
+        {showProgress && (
+          <>
+            <div className="relative mt-2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="absolute h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${filePerc}%` }}
+              ></div>
+            </div>
+            <p className="text-sm self-center mt-1 text-gray-600">
+              Uploading {filePerc}%...
+            </p>
+          </>
+        )}
+        {fileUploadError && (
+          <p className="text-sm self-center mt-1 text-red-700">
+            Error: Image upload failed (image must be less than 2 MB).
+          </p>
+        )}
+        {!fileUploadError && filePerc === 100 && (
+          <p className="text-sm self-center mt-1 text-green-700">
+            Image Successfully Uploaded!
+          </p>
+        )}
+
+        {/* Form inputs */}
+        <input
+          type="text"
+          placeholder="Username"
+          id="username"
+          className="border p-3 rounded-lg"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          id="email"
+          className="border p-3 rounded-lg"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          id="password"
+          className="border p-3 rounded-lg"
+        />
+        <button className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80">
+          Update Profile
+        </button>
+      </form>
+
+      <div className="flex justify-between mt-5">
+        <span className="text-red-700 cursor-pointer">Delete Account</span>
+        <span className="text-red-700 cursor-pointer">Sign out</span>
+      </div>
+    </div>
+  );
+}
+
 ==========================================================================
 Create update user API route
 ==========================================================================
-
-1) In user.route.js folder add code which looks like this
+1:) Go to user.route.js and write this code:
 
 import express from "express";
 import { test, updateUser } from "../controllers/user.controller.js";
-import { verifyToken } from "../utils/verifyUser.js"
+import { verifyToken } from "../utils/verifyUser.js";
 
 const router = express.Router();
 
+// Test route
 router.get("/test", test);
-router.post("/update/:id", verifyToken, updateUser);
+
+// Update user profile route
+router.put("/update/:id", verifyToken, updateUser);
 
 export default router;
 
-2) create verifyUser.js file in utils folder
 
-3) add code in index.js which looks like this
+
+2:) Go to user.controller.js and create updateUser controller.
+
+import bcryptjs from "bcryptjs";
+import User from "../models/user.model.js";
+import { errorHandler } from "../utils/error.js";
+
+export const test = (req, res) => {
+  res.json({
+    message: "Api route is working...",
+  });
+};
+
+export const updateUser = async (req, res, next) => {
+  if (req.user.id !== parseInt(req.params.id, 10)) {
+    return next(errorHandler(401, "You can only update your own account!"));
+  }
+
+  try {
+    // Hash password if provided
+    if (req.body.password) {
+      req.body.password = bcryptjs.hashSync(req.body.password, 10);
+    }
+
+    // Find and update the user in MySQL using Sequelize
+    const [updatedRowsCount] = await User.update(
+      {
+        username: req.body.username,
+        email: req.body.email,
+        password: req.body.password,
+        avatar: req.body.avatar, // For profile pictures (if applicable)
+      },
+      { where: { id: req.params.id } }
+    );
+
+    if (updatedRowsCount === 0) {
+      return next(errorHandler(404, "User not found or no changes made!"));
+    }
+
+    // Fetch the updated user
+    const updatedUser = await User.findByPk(req.params.id, {
+      attributes: { exclude: ["password"] }, // Exclude the password from response
+    });
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+3:) Go to utils and create verifyUser.js for checking the right user for updating the profile before that install a packege in root folder FYP 
+
+  $ npm i cookie-parser
+
+Now initialize this packege for that
+
+4:) Go to index.js file and write this code:
 
 // index.js
 import express from "express";
@@ -3357,15 +3469,24 @@ import "./sequelize.js"; // This will handle the database connection and sync
 import User from "./models/user.model.js"; // User model (already synced in sequelize.js)
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
+// cookieParser
 import cookieParser from "cookie-parser";
 
 const app = express(); // Initialize app
 app.use(express.json()); // Middleware to parse JSON
 
+// cookieParser
+app.use(cookieParser());
+
 // Test Route (Must come AFTER app initialization)
 app.get("/api/db-test", (req, res) => {
   res.send("Connected to the database!");
 });
+
+// Test API route
+app.use("/api/user", userRouter);
+// Auth route
+app.use("/api/auth", authRouter);
 
 // Middleware for error handling
 app.use((err, req, res, next) => {
@@ -3378,71 +3499,547 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.use(cookieParser());
-
 // Start the server and only log once
 app.listen(3000, () => {
   console.log("Server is running on port 3000!");
 });
 
-// Test API route
-app.use("/api/user", userRouter);
-// Auth route
-app.use("/api/auth", authRouter);
 
-4) In verifyUser.js file add this code
+5:) Go to verifyUser.js and write this code:
 
 import jwt from "jsonwebtoken";
 import { errorHandler } from "./error.js";
 
 export const verifyToken = (req, res, next) => {
-  const token = req.cookies.access_token;
+  const token = req.cookies.access_token; // Corrected `req.cookie` to `req.cookies`
 
-  if (!token) return next(errorHandler(401, "Unauthorized"));
+  if (!token) {
+    return next(errorHandler(401, "Unauthorized - Token not provided!"));
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return next(errorHandler(403, "Forbidden"));
-
-    req.user = user;
+    if (err) {
+      return next(errorHandler(403, "Forbidden - Invalid token!"));
+    }
+    req.user = user; // Attach user info to `req` for use in the controller
     next();
   });
 };
 
-4) In user.controller.js file add this code of updateUser
 
-import bcryptjs from "bcryptjs";
-import User from "../models/user.model.js";
+6:) also update the user.model.js in which i just write the id column:
 
-export const test = (req, res) => {
-  res.json({
-    message: "Api route is working...",
-  });
-};
+import { DataTypes } from "sequelize";
+import sequelize from "../sequelize.js";
 
-export const updateUser = async (req, res, next) => {
-  if (req.user.id !== req.params.id)
-    return next(errorHandler(401, "You can only update your own account! "));
-  try {
-    if (req.body.password) {
-      req.body.password = bcryptjs.hashSync(req.body.password, 10);
-    }
-
-    const updateUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: {
-          username: req.body.username,
-          email: req.body.email,
-          password: req.body.password,
-          avatar: req.body.avatar,
-        },
-      },
-      { new: true }
-    );
-
-    const { password, ...rest } = updateUser._doc;
-    res.status(200).json(rest);
-  } catch (error) {
-    next(error);
+const User = sequelize.define(
+  "User",
+  {
+    id: {
+      type: DataTypes.INTEGER, // Explicit primary key
+      autoIncrement: true, // Auto-incrementing
+      primaryKey: true, // Primary key
+    },
+    username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    avatar: {
+      type: DataTypes.STRING,
+      defaultValue:
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+    },
+  },
+  {
+    timestamps: true,
   }
+);
+
+export default User;
+
+
+7:) Go to insomnia and test it...
+
+  * For that create another folder name is "user" 
+  * in which create a HTTP request name is "update user"
+  * this will be a post request
+  * then sigin and copy that user id 
+  * paste id in url like = localhost:3000/api/user/update/2
+  * create a json body and write this 
+
+  {
+    "username": "Tayyab Khan"
+  }
+
+  * and send 
+
+  {
+	"id": 2,
+	"username": "Tayyab Khan",
+	"email": "tayyab11@example.com",
+	"avatar": "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
+	"createdAt": "2025-01-07T15:48:38.000Z",
+	"updatedAt": "2025-01-07T15:52:28.000Z"
+}
+
+==========================================================================
+Complete update user functionality
+==========================================================================
+1:)
+
+import { useSelector } from "react-redux";
+import { useRef, useState, useEffect } from "react";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+} from "../redux/user/userSlice";
+import { useDispatch } from "react-redux";
+
+export default function Profile() {
+  const fileRef = useRef(null); // Initial value should be null
+  const { currentUser } = useSelector((state) => state.user);
+  const [file, setFile] = useState(undefined);
+  const [filePerc, setFilePerc] = useState(0);
+  const [fileUploadError, setFileUploadError] = useState(false);
+  const [showProgress, setShowProgress] = useState(false); // To control visibility of progress
+  const [formData, setFormData] = useState({});
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload(file);
+    }
+  }, [file]);
+
+  const handleFileUpload = (file) => {
+    setShowProgress(true); // Show progress bar when upload starts
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
+        // Simulate a slower progression with setTimeout
+        setTimeout(() => {
+          setFilePerc(Math.round(progress));
+        }, 300); // Add a 300ms delay for smoother progression
+      },
+      (error) => {
+        setFileUploadError(true);
+        setShowProgress(false); // Hide progress bar on error
+      },
+      () => {
+        setTimeout(() => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setFormData({ ...formData, avatar: downloadURL });
+            setShowProgress(false); // Hide progress bar after success
+            setFilePerc(0); // Reset progress percentage
+          });
+        }, 500); // Add a slight delay to keep the success message visible
+      }
+    );
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  console.log(currentUser.id);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+    }
+  };
+
+  return (
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Input for uploading profile image */}
+        <input
+          onChange={(e) => setFile(e.target.files[0])}
+          type="file"
+          name="profile"
+          id="profile"
+          ref={fileRef}
+          hidden
+          accept="image/*"
+        />
+        <img
+          src={formData.avatar || currentUser.avatar}
+          alt="profile"
+          className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
+          onClick={() => fileRef.current.click()}
+        />
+
+        {/* Display upload progress */}
+        {showProgress && (
+          <>
+            <div className="relative mt-2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="absolute h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${filePerc}%` }}
+              ></div>
+            </div>
+            <p className="text-sm self-center mt-1 text-gray-600">
+              Uploading {filePerc}%...
+            </p>
+          </>
+        )}
+        {fileUploadError && (
+          <p className="text-sm self-center mt-1 text-red-700">
+            Error: Image upload failed (image must be less than 2 MB).
+          </p>
+        )}
+        {!fileUploadError && filePerc === 100 && (
+          <p className="text-sm self-center mt-1 text-green-700">
+            Image Successfully Uploaded!
+          </p>
+        )}
+
+        {/* Form inputs */}
+        <input
+          type="text"
+          placeholder="Username"
+          id="username"
+          className="border p-3 rounded-lg"
+          defaultValue={currentUser.username}
+          onChange={handleChange}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          id="email"
+          className="border p-3 rounded-lg"
+          defaultValue={currentUser.email}
+          onChange={handleChange}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          id="password"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+        <button className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80">
+          Update Profile
+        </button>
+      </form>
+
+      <div className="flex justify-between mt-5">
+        <span className="text-red-700 cursor-pointer">Delete Account</span>
+        <span className="text-red-700 cursor-pointer">Sign out</span>
+      </div>
+    </div>
+  );
+}
+
+
+2:) Go to userSlice.js file and add these three reducers for update user profile.
+
+import { createSlice } from "@reduxjs/toolkit";
+
+const initialState = {
+  currentUser: null,
+  error: null,
+  loading: false,
 };
+
+const userSlice = createSlice({
+  name: "user",
+  initialState,
+  reducers: {
+    signInStart: (state) => {
+      state.loading = true;
+    },
+    signInSuccess: (state, action) => {
+      state.currentUser = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
+    signInFailure: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    updateUserStart: (state) => {
+      state.loading = true;
+    },
+    updateUserSuccess: (state, action) => {
+      state.currentUser = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
+    updateUserFailure: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+  },
+});
+
+export const {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+} = userSlice.actions;
+
+export default userSlice.reducer;
+
+3:) Now test it by change username and then refresh the page so you can see that the new username will be still show 
+
+4:) I add some animation in Profile.jsx:
+
+import { useSelector, useDispatch } from "react-redux";
+import { useRef, useState, useEffect } from "react";
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+} from "../redux/user/userSlice";
+import { app } from "../firebase";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+
+export default function Profile() {
+  const fileRef = useRef(null);
+  const { currentUser } = useSelector((state) => state.user); // Access current user from Redux state
+  const dispatch = useDispatch();
+
+  const [file, setFile] = useState(undefined);
+  const [filePerc, setFilePerc] = useState(0);
+  const [fileUploadError, setFileUploadError] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [message, setMessage] = useState(""); // New state to hold the success message
+  const [loading, setLoading] = useState(false); // State to track loading status
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload(file);
+    }
+  }, [file]);
+
+  const handleFileUpload = (file) => {
+    setShowProgress(true);
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setTimeout(() => {
+          setFilePerc(Math.round(progress));
+        }, 300);
+      },
+      (error) => {
+        setFileUploadError(true);
+        setShowProgress(false);
+      },
+      () => {
+        setTimeout(() => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setFormData({ ...formData, avatar: downloadURL });
+            setShowProgress(false);
+            setFilePerc(0);
+          });
+        }, 500);
+      }
+    );
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); // Set loading to true when form is submitted
+
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        setLoading(false); // Stop loading on failure
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setMessage("Profile Updated Successfully");
+
+      // Set a timeout to hide the message after 3 seconds
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+
+      setLoading(false); // Stop loading after the success
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setLoading(false); // Stop loading on error
+    }
+  };
+
+  return (
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input
+          onChange={(e) => setFile(e.target.files[0])}
+          type="file"
+          name="profile"
+          id="profile"
+          ref={fileRef}
+          hidden
+          accept="image/*"
+        />
+        <img
+          src={formData.avatar || currentUser.avatar}
+          alt="profile"
+          className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
+          onClick={() => fileRef.current.click()}
+        />
+
+        {showProgress && (
+          <>
+            <div className="relative mt-2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="absolute h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${filePerc}%` }}
+              ></div>
+            </div>
+            <p className="text-sm self-center mt-1 text-gray-600">
+              Uploading {filePerc}%...
+            </p>
+          </>
+        )}
+        {fileUploadError && (
+          <p className="text-sm self-center mt-1 text-red-700">
+            Error: Image upload failed (image must be less than 2 MB).
+          </p>
+        )}
+        {!fileUploadError && filePerc === 100 && (
+          <p className="text-sm self-center mt-1 text-green-700">
+            Image Successfully Uploaded!
+          </p>
+        )}
+
+        <input
+          type="text"
+          placeholder="Username"
+          id="username"
+          className="border p-3 rounded-lg"
+          defaultValue={currentUser.username}
+          onChange={handleChange}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          id="email"
+          className="border p-3 rounded-lg"
+          defaultValue={currentUser.email}
+          onChange={handleChange}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          id="password"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 border-t-2 border-white rounded-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" stroke="none" fill="none" />
+            </svg>
+          ) : (
+            "Update Profile"
+          )}
+          {loading && <span>Loading...</span>}
+        </button>
+      </form>
+
+      <div className="flex justify-between mt-5">
+        <span className="text-red-700 cursor-pointer">Delete Account</span>
+        <span className="text-red-700 cursor-pointer">Sign out</span>
+      </div>
+
+      {/* Success message */}
+      {message && (
+        <div className="text-green-700 py-7 rounded-lg">{message}</div>
+      )}
+    </div>
+  );
+}
+
+
+==========================================================================
+Add delete user functionality
+==========================================================================
