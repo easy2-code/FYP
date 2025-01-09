@@ -7,6 +7,7 @@ import {
   deleteUserFailure,
   deleteUserStart,
   deleteUserSuccess,
+  signOutUserStart,
 } from "../redux/user/userSlice";
 import { app } from "../firebase";
 import {
@@ -132,6 +133,22 @@ export default function Profile() {
     }
   };
 
+  // Sign Out function
+  const handleSignOut = async () => {
+    try {
+      dispatch(signOutUserStart());
+      const res = await fetch("/api/auth/signout");
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message));
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+    } catch (error) {
+      dispatch(deleteUserFailure(data.message));
+    }
+  };
+
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
@@ -243,9 +260,7 @@ export default function Profile() {
 
         <span
           className="text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300 py-2 px-4 rounded-lg cursor-pointer font-semibold text-sm flex items-center gap-2"
-          onClick={() => {
-            // Implement sign-out logic here
-          }}
+          onClick={handleSignOut}
         >
           <svg
             className="h-5 w-5"

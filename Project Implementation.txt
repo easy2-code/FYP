@@ -4504,3 +4504,546 @@ export default userSlice.reducer;
 
 
 6:) Now test the Delete Account button...
+
+
+==========================================================================
+Add sign out user functionality
+==========================================================================
+1:) Go to auth.route.js and create a route.
+
+import express from "express";
+import {
+  google,
+  signin,
+  signOut,
+  signup,
+} from "../controllers/auth.controller.js";
+
+const router = express.Router();
+
+// POST /api/auth/signup
+router.post("/signup", signup);
+
+// POST /api/auth/signin
+router.post("/signin", signin);
+
+// POST /api/auth/google
+router.post("/google", google);
+
+// get /api/auth/signout
+router.get("/signout", signOut);
+
+export default router;
+
+
+2:) Go to auth.controller.js and create that signOut function.
+
+import User from "../models/user.model.js";
+import bcryptjs from "bcryptjs";
+import { errorHandler } from "../utils/error.js";
+import jwt from "jsonwebtoken";
+
+export const signup = async (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  // Check if any field is missing
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    // Check if the username already exists
+    const existingUsername = await User.findOne({ where: { username } });
+    if (existingUsername) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Username already exists" });
+    }
+
+    // Check if the email already exists
+    const existingEmail = await User.findOne({ where: { email } });
+    if (existingEmail) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email already exists" });
+    }
+
+    // Hash the password
+    const hashedPassword = bcryptjs.hashSync(password, 10);
+
+    // Create a new user
+    const newUser = new User({ username, email, password: hashedPassword });
+    await newUser.save();
+
+    // Respond with success and include user ID, username, email
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: {
+        id: newUser.id, // Include the user's ID (assuming you're using an auto-increment primary key)
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
+  } catch (error) {
+    // Catch any unexpected errors and send a generic error response
+    next(error);
+  }
+};
+
+export const signin = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  try {
+    // Check if the user exists
+    const validUser = await User.findOne({ where: { email } });
+    if (!validUser) {
+      return next(errorHandler(404, "User not found!"));
+    }
+
+    // Verify password
+    const validPassword = bcryptjs.compareSync(password, validUser.password);
+    if (!validPassword) {
+      return next(errorHandler(401, "Wrong credentials!"));
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: validUser.id }, process.env.JWT_SECRET);
+    // Send token and user details
+    const { password: pass, ...rest } = validUser.toJSON(); // Exclude password
+    res
+      .cookie("access_token", token, { httpOnly: true })
+      .status(200)
+      .json(rest);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const google = async (req, res, next) => {
+  try {
+    const { email, name, photo } = req.body;
+
+    let user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      const username = `${name.split(" ").join("").toLowerCase()}${Math.random()
+        .toString(36)
+        .slice(-4)}`;
+      const hashedPassword = bcryptjs.hashSync(
+        Math.random().toString(36).slice(-16),
+        10
+      );
+
+      user = await User.create({
+        username,
+        email,
+        password: hashedPassword,
+        avatar: photo,
+      });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    const { password, ...rest } = user.toJSON();
+
+    res
+      .cookie("access_token", token, { httpOnly: true, secure: true })
+      .status(200)
+      .json(rest);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Function for signOut
+export const signOut = async (req, res, next) => {
+  try {
+    res.clearCookie("access_token");
+    res.status(200).json("User has been logged out!");
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+3:) Go to Profile.jsx and write this code:
+
+import { useSelector, useDispatch } from "react-redux";
+import { useRef, useState, useEffect } from "react";
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+  deleteUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  signOutUserStart,
+} from "../redux/user/userSlice";
+import { app } from "../firebase";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+
+export default function Profile() {
+  const fileRef = useRef(null);
+  const { currentUser } = useSelector((state) => state.user); // Access current user from Redux state
+  const dispatch = useDispatch();
+
+  const [file, setFile] = useState(undefined);
+  const [filePerc, setFilePerc] = useState(0);
+  const [fileUploadError, setFileUploadError] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [message, setMessage] = useState(""); // New state to hold the success message
+  const [loading, setLoading] = useState(false); // State to track loading status
+
+  useEffect(() => {
+    if (file) {
+      handleFileUpload(file);
+    }
+  }, [file]);
+
+  const handleFileUpload = (file) => {
+    setShowProgress(true);
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + file.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setTimeout(() => {
+          setFilePerc(Math.round(progress));
+        }, 300);
+      },
+      (error) => {
+        setFileUploadError(true);
+        setShowProgress(false);
+      },
+      () => {
+        setTimeout(() => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setFormData({ ...formData, avatar: downloadURL });
+            setShowProgress(false);
+            setFilePerc(0);
+          });
+        }, 500);
+      }
+    );
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  // Function for upating user profile
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true); // Set loading to true when form is submitted
+
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        setLoading(false); // Stop loading on failure
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setMessage("Profile Updated Successfully");
+
+      // Set a timeout to hide the message after 3 seconds
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+
+      setLoading(false); // Stop loading after the success
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setLoading(false); // Stop loading on error
+    }
+  };
+
+  // Deleting user account
+  const handleDeleteUser = async () => {
+    const confirmation = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone!"
+    );
+    if (!confirmation) return;
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message));
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+      alert("Account deleted successfully. Redirecting...");
+      // Redirect user after account deletion
+      window.location.replace("/sign-up");
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
+    }
+  };
+
+  // Sign Out function
+  const handleSignOut = async () => {
+    try {
+      dispatch(signOutUserStart());
+      const res = await fetch("/api/auth/signout");
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message));
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+    } catch (error) {
+      dispatch(deleteUserFailure(data.message));
+    }
+  };
+
+  return (
+    <div className="p-3 max-w-lg mx-auto">
+      <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input
+          onChange={(e) => setFile(e.target.files[0])}
+          type="file"
+          name="profile"
+          id="profile"
+          ref={fileRef}
+          hidden
+          accept="image/*"
+        />
+        <img
+          src={formData.avatar || currentUser.avatar}
+          alt="profile"
+          className="rounded-full h-24 w-24 object-cover cursor-pointer self-center mt-2"
+          onClick={() => fileRef.current.click()}
+        />
+
+        {showProgress && (
+          <>
+            <div className="relative mt-2 w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="absolute h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${filePerc}%` }}
+              ></div>
+            </div>
+            <p className="text-sm self-center mt-1 text-gray-600">
+              Uploading {filePerc}%...
+            </p>
+          </>
+        )}
+        {fileUploadError && (
+          <p className="text-sm self-center mt-1 text-red-700">
+            Error: Image upload failed (image must be less than 2 MB).
+          </p>
+        )}
+        {!fileUploadError && filePerc === 100 && (
+          <p className="text-sm self-center mt-1 text-green-700">
+            Image Successfully Uploaded!
+          </p>
+        )}
+
+        <input
+          type="text"
+          placeholder="Username"
+          id="username"
+          className="border p-3 rounded-lg"
+          defaultValue={currentUser.username}
+          onChange={handleChange}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          id="email"
+          className="border p-3 rounded-lg"
+          defaultValue={currentUser.email}
+          onChange={handleChange}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          id="password"
+          className="border p-3 rounded-lg"
+          onChange={handleChange}
+        />
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 border-t-2 border-white rounded-full"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" stroke="none" fill="none" />
+            </svg>
+          ) : (
+            "Update Profile"
+          )}
+          {loading && <span>Loading...</span>}
+        </button>
+      </form>
+
+      <div className="flex justify-between mt-5">
+        <span
+          onClick={handleDeleteUser}
+          className="text-white bg-red-700 hover:bg-red-800 transition-colors duration-300 py-2 px-4 rounded-lg cursor-pointer font-semibold text-sm flex items-center gap-2"
+        >
+          <svg
+            className="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 4H8l-1 1H3v2h1l1 14h10l1-14h1V5h-3l-1-1z" />
+          </svg>
+          Delete Account
+        </span>
+
+        <span
+          className="text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300 py-2 px-4 rounded-lg cursor-pointer font-semibold text-sm flex items-center gap-2"
+          onClick={handleSignOut}
+        >
+          <svg
+            className="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M16 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+            <path d="M10 12l2-2 2 2" />
+          </svg>
+          Sign Out
+        </span>
+      </div>
+
+      {/* Success message */}
+      {message && (
+        <div className="text-green-700 py-7 rounded-lg">{message}</div>
+      )}
+    </div>
+  );
+}
+
+
+4:) Go to userSlice.js and write this code:
+
+import { createSlice } from "@reduxjs/toolkit";
+
+const initialState = {
+  currentUser: null,
+  error: null,
+  loading: false,
+};
+
+const userSlice = createSlice({
+  name: "user",
+  initialState,
+  reducers: {
+    signInStart: (state) => {
+      state.loading = true;
+    },
+    signInSuccess: (state, action) => {
+      state.currentUser = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
+    signInFailure: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    updateUserStart: (state) => {
+      state.loading = true;
+    },
+    updateUserSuccess: (state, action) => {
+      state.currentUser = action.payload;
+      state.loading = false;
+      state.error = null;
+    },
+    updateUserFailure: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    deleteUserStart: (state) => {
+      state.loading = true;
+    },
+    deleteUserSuccess: (state) => {
+      state.currentUser = null;
+      state.loading = false;
+      state.error = null;
+    },
+    deleteUserFailure: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    signOutUserStart: (state) => {
+      state.loading = true;
+    },
+    signOutUserSuccess: (state) => {
+      state.currentUser = null;
+      state.loading = false;
+      state.error = null;
+    },
+    signOutUserFailure: (state, action) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+  },
+});
+
+export const {
+  signInStart,
+  signInSuccess,
+  signInFailure,
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  deleteUserFailure,
+  signOutUserStart,
+  signOutUserSuccess,
+  signOutUserFailure,
+} = userSlice.actions;
+
+export default userSlice.reducer;
+
+5:) Now test the sign out button....
