@@ -144,6 +144,7 @@ export default function Profile() {
         return;
       }
       dispatch(deleteUserSuccess(data));
+      window.location.replace("/sign-in"); // Redirect to the sign-in page
     } catch (error) {
       dispatch(deleteUserFailure(data.message));
     }
