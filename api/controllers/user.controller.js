@@ -44,3 +44,21 @@ export const updateUser = async (req, res, next) => {
     next(error);
   }
 };
+
+// Function for deleting user
+export const deleteUser = async (req, res, next) => {
+  if (req.user.id !== parseInt(req.params.id, 10)) {
+    return next(errorHandler(401, "You can only delete your own account!"));
+  }
+  try {
+    const deletedUser = await User.destroy({ where: { id: req.params.id } }); // Sequelize ORM
+    if (!deletedUser) {
+      return next(errorHandler(404, "User not found!"));
+    }
+    // Clear the access token cookie
+    res.clearCookie("access_token");
+    res.status(200).json({ success: true, message: "User has been deleted!" });
+  } catch (error) {
+    next(error);
+  }
+};

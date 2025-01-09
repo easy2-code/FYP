@@ -4,6 +4,9 @@ import {
   updateUserStart,
   updateUserSuccess,
   updateUserFailure,
+  deleteUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
 } from "../redux/user/userSlice";
 import { app } from "../firebase";
 import {
@@ -68,6 +71,7 @@ export default function Profile() {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  // Function for upating user profile
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); // Set loading to true when form is submitted
@@ -100,6 +104,31 @@ export default function Profile() {
     } catch (error) {
       dispatch(updateUserFailure(error.message));
       setLoading(false); // Stop loading on error
+    }
+  };
+
+  // Deleting user account
+  const handleDeleteUser = async () => {
+    const confirmation = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone!"
+    );
+    if (!confirmation) return;
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data.message));
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+      alert("Account deleted successfully. Redirecting...");
+      // Redirect user after account deletion
+      window.location.replace("/sign-up");
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
     }
   };
 
@@ -193,8 +222,46 @@ export default function Profile() {
       </form>
 
       <div className="flex justify-between mt-5">
-        <span className="text-red-700 cursor-pointer">Delete Account</span>
-        <span className="text-red-700 cursor-pointer">Sign out</span>
+        <span
+          onClick={handleDeleteUser}
+          className="text-white bg-red-700 hover:bg-red-800 transition-colors duration-300 py-2 px-4 rounded-lg cursor-pointer font-semibold text-sm flex items-center gap-2"
+        >
+          <svg
+            className="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 4H8l-1 1H3v2h1l1 14h10l1-14h1V5h-3l-1-1z" />
+          </svg>
+          Delete Account
+        </span>
+
+        <span
+          className="text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300 py-2 px-4 rounded-lg cursor-pointer font-semibold text-sm flex items-center gap-2"
+          onClick={() => {
+            // Implement sign-out logic here
+          }}
+        >
+          <svg
+            className="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M16 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z" />
+            <path d="M10 12l2-2 2 2" />
+          </svg>
+          Sign Out
+        </span>
       </div>
 
       {/* Success message */}
