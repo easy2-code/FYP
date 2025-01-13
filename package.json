@@ -1,7 +1,6 @@
 {
   "name": "fyp",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -17,9 +16,18 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.5",
-    "nodemon": "^3.1.7",
+    "mysql2": "^3.12.0",
+    "nodemon": "^3.1.9",
     "redux-persist": "^6.0.0",
     "sequelize": "^6.37.5"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easy2-code/FYP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/easy2-code/FYP/issues"
+  },
+  "homepage": "https://github.com/easy2-code/FYP#readme",
+  "description": ""
 }
