@@ -4,6 +4,7 @@ import "./sequelize.js"; // This will handle the database connection and sync
 import User from "./models/user.model.js"; // User model (already synced in sequelize.js)
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
+import listingRouter from "./routes/listing.route.js";
 // cookieParser
 import cookieParser from "cookie-parser";
 
@@ -22,6 +23,8 @@ app.get("/api/db-test", (req, res) => {
 app.use("/api/user", userRouter);
 // Auth route
 app.use("/api/auth", authRouter);
+// listing route
+app.use("/api/listing", listingRouter)
 
 // Middleware for error handling
 app.use((err, req, res, next) => {
