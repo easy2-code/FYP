@@ -1,5 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   updateUserStart,
   updateUserSuccess,
@@ -16,7 +17,6 @@ import {
   ref,
   uploadBytesResumable,
 } from "firebase/storage";
-import { Link } from "react-router-dom";
 
 export default function Profile() {
   const fileRef = useRef(null);

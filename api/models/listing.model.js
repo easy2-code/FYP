@@ -1,67 +1,63 @@
-import { DataTypes, NUMBER } from "sequelize";
+import { DataTypes } from "sequelize";
 import sequelize from "../sequelize.js";
 
-const listingSchema = sequelize.define(
+const Listing = sequelize.define(
+  "Listing",
   {
     name: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     address: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     regularPrice: {
-      type: int,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     discountPrice: {
-      type: Number,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     bathrooms: {
-      type: Number,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     bedrooms: {
-      type: Number,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     furnished: {
-      type: Boolean,
-      required: true,
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     parking: {
-      type: Boolean,
-      required: true,
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     type: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     offer: {
-      type: String,
-      required: true,
-    },
-    offer: {
-      type: Boolean,
-      required: true,
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     imageUrls: {
-      type: Array,
-      required: true,
+      type: DataTypes.JSON,
+      allowNull: false,
     },
     userRef: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   },
   { timestamps: true }
 );
-
 
 export default Listing;

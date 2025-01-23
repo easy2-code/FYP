@@ -19,4 +19,4 @@ Packages installed for project..
 17:) npm install @reduxjs/toolkit react-redux [in project folder]
 18:) npm i redux-persist [in project folder]
 19:) npm install firebase [in project folder]
-20:) npm i cookie-parser [in root folder]
+20:) npm i cookie-parser [in FYP root folder]

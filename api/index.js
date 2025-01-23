@@ -24,7 +24,7 @@ app.use("/api/user", userRouter);
 // Auth route
 app.use("/api/auth", authRouter);
 // listing route
-app.use("/api/listing", listingRouter)
+app.use("/api/listing", listingRouter);
 
 // Middleware for error handling
 app.use((err, req, res, next) => {
