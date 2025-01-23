@@ -5049,40 +5049,11 @@ export default userSlice.reducer;
 
 5:) Now test the sign out button....
 
-
 ==========================================================================
 Add create listing API route
 ==========================================================================
 
-1) In the index.js create a new route
-
-// listing route
-app.use("/api/listing", listingRouter)
-
-2) create new file of listing.route.js in routes folder and add this code 
-
-import express from "express";
-import { createListing } from "../controllers/listing.controller.js";
-import { verifyToken } from "../utils/verifyUser.js";
-
-const router = express.Router();
-
-router.post("/create", verifyToken, createListing);
-
-export default router;
-
-3) create new file listing.controller.js in controller folder and add this code 
-
-export const createListing = async(req,res,next) => {
-    try {
-        const listing = await Listing.create(req.body);
-        return res.status(201).json(listing);
-    } catch (error) {
-        next(error);
-    }
-}
-
-4) add imports to index.js file so it will looks like this 
+1)Open index.js file and create listing route:
 
 // index.js
 import express from "express";
@@ -5110,7 +5081,7 @@ app.use("/api/user", userRouter);
 // Auth route
 app.use("/api/auth", authRouter);
 // listing route
-app.use("/api/listing", listingRouter)
+app.use("/api/listing", listingRouter);
 
 // Middleware for error handling
 app.use((err, req, res, next) => {
@@ -5128,76 +5099,165 @@ app.listen(3000, () => {
   console.log("Server is running on port 3000!");
 });
 
-5) in models folder create new file listing.model.js and add this code 
 
-import { DataTypes, NUMBER } from "sequelize";
+2) create new file of listing.route.js in routes folder and add this code 
+
+import express from "express";
+import { createListing } from "../controllers/listing.controller.js";
+import { verifyToken } from "../utils/verifyUser.js";
+
+const router = express.Router();
+
+router.post("/create", verifyToken, createListing);
+
+export default router;
+
+
+3) create new file listing.controller.js in controller folder and add this code 
+
+import Listing from "../models/listing.model.js";
+
+export const createListing = async (req, res, next) => {
+  try {
+    const listing = await Listing.create(req.body);
+    return res.status(201).json(listing);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+4) in models folder create new file listing.model.js and add this code 
+
+import { DataTypes } from "sequelize";
 import sequelize from "../sequelize.js";
 
-const listingSchema = sequelize.define(
+const Listing = sequelize.define(
+  "Listing",
   {
     name: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     address: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     regularPrice: {
-      type: int,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     discountPrice: {
-      type: Number,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     bathrooms: {
-      type: Number,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     bedrooms: {
-      type: Number,
-      required: true,
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     furnished: {
-      type: Boolean,
-      required: true,
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     parking: {
-      type: Boolean,
-      required: true,
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     type: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     offer: {
-      type: String,
-      required: true,
-    },
-    offer: {
-      type: Boolean,
-      required: true,
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     imageUrls: {
-      type: Array,
-      required: true,
+      type: DataTypes.JSON,
+      allowNull: false,
     },
     userRef: {
-      type: String,
-      required: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
   },
   { timestamps: true }
 );
 
-
 export default Listing;
 
+5) Update sequelize.js
+
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
+
+// Initialize Sequelize
+const sequelize = new Sequelize(
+  process.env.DB_NAME, // Database name
+  process.env.DB_USER, // Database user
+  process.env.DB_PASSWORD, // Database password
+  {
+    host: process.env.DB_HOST, // Database host (e.g., localhost)
+    dialect: "mysql", // Specify the database dialect
+    logging: false, // Disable query logging
+  }
+);
+
+// Function to test connection and sync models
+const initializeDatabase = async () => {
+  try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log("✅ Connected to the MySQL database!");
+
+    // Sync models
+    await sequelize.sync({ alter: true }); // Use alter: true for safe schema updates
+    console.log("✅ All models synced successfully!");
+  } catch (error) {
+    console.error("❌ Unable to connect to the database:", error.message);
+    process.exit(1); // Exit process if the database connection fails
+  }
+};
+
+// Call the initialization function
+initializeDatabase();
+
+export default sequelize;
+
+
+6) Go to insomnia and create another folder name is Listing and create new HTTP Request and set the request name "creare a listing" and this will be a post request 
+
+  * POST : localhost:3000/api/listing/create
+  * JSON :
+            {
+              "name": "test",
+              "description": "test",
+              "address": "test",
+              "regularPrice": 500,
+              "discountPrice": 500,
+              "bathrooms": 5,
+              "bedrooms": 5,
+              "furnished": true,
+              "parking": true,
+              "type": "rent",
+              "offer": true,
+              "imageUrls":["dhfe","efhoehf"],
+              "userRef":"asdfghhjkl"
+            }
+
+    * Click on submit to test it
+    * 201 created
+    * its means something is created successfully
 
 ==========================================================================
 Complete create listing page Ul
@@ -5208,6 +5268,7 @@ so the code will looks like this
 
 import { useSelector, useDispatch } from "react-redux";
 import { useRef, useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   updateUserStart,
   updateUserSuccess,
@@ -5224,7 +5285,6 @@ import {
   ref,
   uploadBytesResumable,
 } from "firebase/storage";
-import { Link } from "react-router-dom";
 
 export default function Profile() {
   const fileRef = useRef(null);
@@ -5504,7 +5564,13 @@ export default function Profile() {
 }
 
 
-2)create a file of createListing.jsx in pages folder 
+2)create a file of CreateListing.jsx in pages folder 
+
+import React from "react";
+
+export default function CreateListing() {
+  return <div>Create Listing</div>;
+}
 
 3) update App.jsx file so it will looks like this 
 
@@ -5516,7 +5582,7 @@ import About from "./pages/About";
 import Profile from "./pages/Profile";
 import Header from "./components/Header";
 import PrivateRoute from "./components/PrivateRoute";
-import CreateListing from "./pages/CreateListing";
+import CreateListing from "./pages/createListing";
 
 export default function App() {
   return (
@@ -5537,7 +5603,7 @@ export default function App() {
 }
 
 
-4) Now add code to Create listing page so it will looks like this 
+4) Now update CreateListing.jsx
 
 import React from "react";
 
@@ -5674,6 +5740,216 @@ export default function CreateListing() {
           </button>
         </div>
       </form>
+    </main>
+  );
+}
+
+5) Check the UI
+
+==========================================================================
+Complete create listing page Ul
+==========================================================================
+
+1) Go to CreateListing.jsx file and write this code:
+
+import React, { useState } from "react";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
+
+export default function CreateListing() {
+  const [files, setFiles] = useState([]);
+  const [formData, setFormData] = useState({
+    imageUrls: [],
+  });
+  const [imageUploadError, setImageUploadError] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // Track the upload progress
+
+  const handleImageSubmit = (e) => {
+    if (files.length > 0 && files.length + formData.imageUrls.length <= 6) {
+      setUploading(true);
+      setImageUploadError(false);
+      setUploadProgress(0); // Reset progress
+      const promises = [];
+
+      for (let i = 0; i < files.length; i++) {
+        promises.push(storeImage(files[i]));
+      }
+
+      Promise.all(promises)
+        .then((urls) => {
+          setFormData({
+            ...formData,
+            imageUrls: formData.imageUrls.concat(urls),
+          });
+          setUploading(false);
+        })
+        .catch(() => {
+          setImageUploadError("Image upload failed (2MB max per image)");
+          setUploading(false);
+        });
+    } else {
+      setImageUploadError("You can upload up to 6 images per listing.");
+    }
+  };
+
+  const storeImage = async (file) => {
+    return new Promise((resolve, reject) => {
+      const storage = getStorage(app);
+      const fileName = `${new Date().getTime()}-${file.name}`;
+      const storageRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(Math.round(progress)); // Update progress state
+        },
+        (error) => reject(error),
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            resolve(downloadURL);
+          });
+        }
+      );
+    });
+  };
+
+  const handleRemoveImage = (index) => {
+    setFormData({
+      ...formData,
+      imageUrls: formData.imageUrls.filter((_, i) => i !== index),
+    });
+  };
+
+  return (
+    <main className="p-3 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-semibold text-center my-7">
+        Create a Listing
+      </h1>
+      <form className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-4 flex-1">
+          <input
+            type="text"
+            placeholder="Name"
+            className="border p-3 rounded-lg"
+            id="name"
+            maxLength="62"
+            minLength="10"
+            required
+          />
+          <textarea
+            placeholder="Description"
+            className="border p-3 rounded-lg"
+            id="description"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Address"
+            className="border p-3 rounded-lg"
+            id="address"
+            required
+          />
+          <div className="flex gap-6 flex-wrap">
+            {["Sell", "Rent", "Parking Spot", "Furnished", "Offer"].map(
+              (label) => (
+                <div key={label} className="flex gap-2">
+                  <input type="checkbox" className="w-5" />
+                  <span>{label}</span>
+                </div>
+              )
+            )}
+          </div>
+          <div className="flex flex-wrap gap-6">
+            {[
+              { id: "bedrooms", label: "Bed" },
+              { id: "bathrooms", label: "Baths" },
+            ].map(({ id, label }) => (
+              <div key={id} className="flex items-center gap-2">
+                <input
+                  type="number"
+                  id={id}
+                  min="1"
+                  max="10"
+                  required
+                  className="p-3 border border-gray-300 rounded-lg"
+                />
+                <p>{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col flex-1 gap-4">
+          <p className="font-semibold">
+            Images:
+            <span className="font-normal text-gray-600 ml-2">
+              You can upload only 6 images..
+            </span>
+          </p>
+          <div className="flex gap-4">
+            <input
+              onChange={(e) => setFiles(e.target.files)}
+              className="p-3 border border-gray-300 rounded w-full"
+              type="file"
+              id="images"
+              accept="image/*"
+              multiple
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={handleImageSubmit}
+              className="p-3 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80"
+            >
+              {uploading ? `Uploading... ${uploadProgress}%` : "Upload"}
+            </button>
+          </div>
+          <p className="text-red-700 text-sm">
+            {imageUploadError && imageUploadError}
+          </p>
+          {formData.imageUrls.length > 0 &&
+            formData.imageUrls.map((url, index) => (
+              <div
+                key={index}
+                className="flex justify-between p-3 border items-center"
+              >
+                <img
+                  src={url}
+                  alt={`listing-${index}`}
+                  className="w-20 h-20 object-contain rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="p-3 text-red-700 rounded-lg uppercase hover:opacity-75"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          <button
+            className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
+            type="submit"
+          >
+            Create Listing
+          </button>
+        </div>
+      </form>
     </main>
   );
 }
+
+
+2) Now test it...
+
+==========================================================================
+Complete upload listing images functionality
+==========================================================================

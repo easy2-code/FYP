@@ -1,28 +1,28 @@
-10/12/2024 - Install React js and Tailwind CSS and create the first template
-10/12/2024 - Create pages and routes
-10/12/2024 - Create Header component
-10/12/2024 - Create and run the server
-10/12/2024 - Connect to database
-10/12/2024 - Create user model
-10/12/2024 - Create a test api route
-14/12/2024 - Create sign up API route
-14/12/2024 - Create a middleware and a function to handle possible errors
-16/12/2024 - Complete sign up page Ul
-16/12/2024 - Complete sign up page functionality
-Create sign in API route
-Complete sign in page functionality
-Add redux toolkit
-Add redux persist
-Add Google OAuth functionality
-Update the header and make the profile page private
-Complete profile page Ul
-Complete image upload functionality
-Create update user API route
-Complete update user functionality 
-Add delete user functionality
-Add sign out user functionality
-20/01/2025 - Add create listing API route
-21/01/2025 - Complete create listing page Ul
+✅Install React js and Tailwind CSS and create the first template
+✅Create pages and routes
+✅Create Header component
+✅Create and run the server
+✅Connect to database
+✅Create user model
+✅Create a test api route
+✅Create sign up API route
+✅Create a middleware and a function to handle possible errors
+✅Complete sign up page Ul
+✅Complete sign up page functionality
+✅Create sign in API route
+✅Complete sign in page functionality
+✅Add redux toolkit
+✅Add redux persist
+✅Add Google OAuth functionality
+✅Update the header and make the profile page private
+✅Complete profile page Ul
+✅Complete image upload functionality
+✅Create update user API route
+✅Complete update user functionality 
+✅Add delete user functionality
+✅Add sign out user functionality
+✅Add create listing API route
+✅Complete create listing page Ul
 Complete upload listing images functionality 
 Complete create listing page functionality 
 Create get user listings API route
