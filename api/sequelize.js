@@ -1,35 +1,38 @@
-// sequelize.js
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
 
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
 // Initialize Sequelize
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+  process.env.DB_NAME, // Database name
+  process.env.DB_USER, // Database user
+  process.env.DB_PASSWORD, // Database password
   {
-    host: process.env.DB_HOST,
-    dialect: "mysql",
-    logging: false, // Disable all query logging from Sequelize
+    host: process.env.DB_HOST, // Database host (e.g., localhost)
+    dialect: "mysql", // Specify the database dialect
+    logging: false, // Disable query logging
   }
 );
 
-// Test the connection and sync models
-(async () => {
+// Function to test connection and sync models
+const initializeDatabase = async () => {
   try {
-    // Authenticate the connection
+    // Test database connection
     await sequelize.authenticate();
-    console.log("Connected to the MySQL database!");
+    console.log("✅ Connected to the MySQL database!");
 
-    // Sync all models (e.g., creating tables if not already created)
-    await sequelize.sync();
-    console.log("User model synced with the database!");
+    // Sync models
+    await sequelize.sync({ alter: true }); // Use alter: true for safe schema updates
+    console.log("✅ All models synced successfully!");
   } catch (error) {
-    console.error("Unable to connect to the database:", error.message);
+    console.error("❌ Unable to connect to the database:", error.message);
+    process.exit(1); // Exit process if the database connection fails
   }
-})();
+};
+
+// Call the initialization function
+initializeDatabase();
 
 export default sequelize;
