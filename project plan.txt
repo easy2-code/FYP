@@ -23,9 +23,9 @@
 ✅Add sign out user functionality
 ✅Add create listing API route
 ✅Complete create listing page Ul
-Complete upload listing images functionality 
-Complete create listing page functionality 
-Create get user listings API route
+✅Complete upload listing images functionality 
+✅Complete create listing page functionality 
+✅Create get user listings API route
 Complete show user listings functionality
 Complete delete user listing functionality
 Create update listing API route

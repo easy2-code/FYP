@@ -1,6 +1,7 @@
 import bcryptjs from "bcryptjs";
 import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
+import Listing from "../models/listing.model.js";
 
 export const test = (req, res) => {
   res.json({
@@ -60,5 +61,30 @@ export const deleteUser = async (req, res, next) => {
     res.status(200).json({ success: true, message: "User has been deleted!" });
   } catch (error) {
     next(error);
+  }
+};
+
+// Function for Getting user
+export const getUserListings = async (req, res, next) => {
+  if (req.user.id === parseInt(req.params.id, 10)) {
+    try {
+      // Query MySQL using Sequelize to get all listings for the user
+      const listings = await Listing.findAll({
+        where: {
+          userId: req.params.id, // Assuming `userId` is the foreign key in the listings table
+        },
+      });
+
+      // If no listings are found, handle it
+      if (!listings || listings.length === 0) {
+        return next(errorHandler(404, "No listings found for this user."));
+      }
+
+      res.status(200).json(listings);
+    } catch (error) {
+      next(error); // Pass the error to the error handling middleware
+    }
+  } else {
+    return next(errorHandler(401, "You can only view your own listings!"));
   }
 };

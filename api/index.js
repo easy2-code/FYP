@@ -1,12 +1,15 @@
-// index.js
 import express from "express";
-import "./sequelize.js"; // This will handle the database connection and sync
+import "./sequelize.js"; // This handles the database connection and sync
 import User from "./models/user.model.js"; // User model (already synced in sequelize.js)
+import Listing from "./models/listing.model.js"; // Listing model
 import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
 import listingRouter from "./routes/listing.route.js";
 // cookieParser
 import cookieParser from "cookie-parser";
+
+// Import the associations after models are loaded
+import "./models/associations.js"; // Import associations file
 
 const app = express(); // Initialize app
 app.use(express.json()); // Middleware to parse JSON

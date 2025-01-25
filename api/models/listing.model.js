@@ -4,6 +4,14 @@ import sequelize from "../sequelize.js";
 const Listing = sequelize.define(
   "Listing",
   {
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "Users", // Reference the Users table name directly
+        key: "id",
+      },
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -50,10 +58,6 @@ const Listing = sequelize.define(
     },
     imageUrls: {
       type: DataTypes.JSON,
-      allowNull: false,
-    },
-    userRef: {
-      type: DataTypes.STRING,
       allowNull: false,
     },
   },
