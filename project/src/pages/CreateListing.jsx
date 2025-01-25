@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 export default function CreateListing() {
   // Retrieve the current user from Redux store
   const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate(); // For programmatic navigation
 
   // State management
   const [files, setFiles] = useState([]); // For file uploads
@@ -38,7 +39,6 @@ export default function CreateListing() {
   const fileInputRef = useRef(null); // Reference for file input
   const [error, setError] = useState(false); // General error state
   const [loading, setLoading] = useState(false); // Form submission state
-  const navigate = useNavigate(); // For programmatic navigation
 
   // Constants for file validation
   const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
@@ -222,7 +222,7 @@ export default function CreateListing() {
         return;
       }
 
-      navigate(`/listing/${data.id}`); // Redirect to listing page
+      navigate(`/api/user/listings/${data.userId}`); // Redirect to listing page
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -269,7 +269,14 @@ export default function CreateListing() {
 
           {/* Regular Price and Discount Price */}
           <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2 w-full sm:w-1/2 lg:w-1/3">
+            {/* Regular Price */}
+            <div className="w-full sm:w-1/2 lg:w-1/3">
+              <label
+                htmlFor="regularPrice"
+                className="block text-sm font-semibold text-gray-700"
+              >
+                Regular Price
+              </label>
               <input
                 type="number"
                 name="regularPrice"
@@ -278,13 +285,20 @@ export default function CreateListing() {
                 max="100000"
                 value={formData.regularPrice}
                 onChange={handlePriceChange}
-                className="p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-2 p-4 border border-gray-300 rounded-lg text-lg w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
-              <span>Regular Price</span>
             </div>
+
+            {/* Discount Price */}
             {formData.offer && (
-              <div className="flex items-center gap-2 w-full sm:w-1/2 lg:w-1/3">
+              <div className="w-full sm:w-1/2 lg:w-1/3">
+                <label
+                  htmlFor="discountPrice"
+                  className="block text-sm font-semibold text-gray-700"
+                >
+                  Discount Price
+                </label>
                 <input
                   type="number"
                   name="discountPrice"
@@ -293,39 +307,51 @@ export default function CreateListing() {
                   max="1000"
                   value={formData.discountPrice}
                   onChange={handlePriceChange}
-                  className="p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="mt-2 p-4 border border-gray-300 rounded-lg text-lg w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
-                <span>Discount Price</span>
               </div>
             )}
           </div>
 
           {/* Bedrooms and Bathrooms */}
           <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2 w-full sm:w-1/2 lg:w-1/3">
+            {/* Bedrooms */}
+            <div className="w-full sm:w-1/2 lg:w-1/3">
+              <label
+                htmlFor="bedrooms"
+                className="block text-sm font-semibold text-gray-700"
+              >
+                Bedrooms
+              </label>
               <input
                 type="number"
                 name="bedrooms"
-                placeholder="Number of beds.."
+                placeholder="Number of beds"
                 value={formData.bedrooms}
                 onChange={handlePriceChange}
-                className="p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-2 p-4 border border-gray-300 rounded-lg text-lg w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
-              <span>Bedrooms</span>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-1/2 lg:w-1/3">
+
+            {/* Bathrooms */}
+            <div className="w-full sm:w-1/2 lg:w-1/3">
+              <label
+                htmlFor="bathrooms"
+                className="block text-sm font-semibold text-gray-700"
+              >
+                Bathrooms
+              </label>
               <input
                 type="number"
                 name="bathrooms"
-                placeholder="Number of baths.."
+                placeholder="Number of baths"
                 value={formData.bathrooms}
                 onChange={handlePriceChange}
-                className="p-4 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-2 p-4 border border-gray-300 rounded-lg text-lg w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
-              <span>Bathrooms</span>
             </div>
           </div>
 

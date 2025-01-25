@@ -26,6 +26,7 @@ app.get("/api/db-test", (req, res) => {
 app.use("/api/user", userRouter);
 // Auth route
 app.use("/api/auth", authRouter);
+
 // listing route
 app.use("/api/listing", listingRouter);
 

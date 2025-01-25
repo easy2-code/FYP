@@ -30,12 +30,38 @@ export default function Profile() {
   const [formData, setFormData] = useState({});
   const [message, setMessage] = useState(""); // New state to hold the success message
   const [loading, setLoading] = useState(false); // State to track loading status
+  const [listings, setListings] = useState([]); // State to store user listings
+  const [showListings, setShowListings] = useState(false); // State to toggle the display of listings
 
   useEffect(() => {
     if (file) {
       handleFileUpload(file);
     }
   }, [file]);
+
+  // Fetch user listings when the "Show Listings" button is clicked
+  const handleShowListings = async () => {
+    try {
+      const res = await fetch(`/api/user/listings/${currentUser.id}`);
+      const data = await res.json();
+
+      // Log the response to see the structure of the data
+      console.log(data);
+
+      // Ensure the data contains an array of listings and set it to state
+      if (Array.isArray(data) && data.length > 0) {
+        setListings(data); // Set listings as the response array
+        setShowListings(true);
+      } else {
+        setMessage("No listings available.");
+        setListings([]); // Clear listings if none are available
+        setShowListings(false);
+      }
+    } catch (error) {
+      setMessage("Error fetching listings.");
+      setListings([]); // Clear listings in case of error
+    }
+  };
 
   const handleFileUpload = (file) => {
     setShowProgress(true);
@@ -291,6 +317,71 @@ export default function Profile() {
       {message && (
         <div className="text-green-700 py-7 rounded-lg">{message}</div>
       )}
+
+      <div className="mt-8">
+        <button
+          onClick={handleShowListings}
+          className="bg-blue-800 text-white p-3 rounded-lg uppercase text-center hover:opacity-95 w-full"
+        >
+          Show My Listings
+        </button>
+
+        {showListings && listings.length > 0 ? (
+          <div className="mt-5 bg-black bg-opacity-10 p-1 rounded-lg">
+            <ul>
+              {listings.map((listing) => (
+                <li
+                  key={listing.id}
+                  className="my-4 p-4 bg-white rounded-lg shadow-lg"
+                >
+                  {/* Listing Details */}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {listing.name}
+                    </h3>
+                    <p className="text-gray-600">{listing.description}</p>
+                    <p className="text-gray-800 font-medium">
+                      Price: ${listing.regularPrice}
+                    </p>
+                    <p className="text-gray-800 font-medium">
+                      Type: {listing.type}
+                    </p>
+                  </div>
+
+                  {/* Images and Buttons */}
+                  <div className="space-y-4">
+                    {listing.imageUrls &&
+                      JSON.parse(listing.imageUrls).map((url, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-4"
+                        >
+                          {/* Image Section */}
+                          <img
+                            src={url}
+                            alt={`listing-image-${index}`}
+                            className="w-32 h-32 object-cover rounded-md"
+                          />
+                          {/* Edit and Delete Buttons */}
+                          <div className="ml-auto flex flex-col space-y-3">
+                            <button className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600">
+                              Edit
+                            </button>
+                            <button className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600">
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">{message}</p>
+        )}
+      </div>
     </div>
   );
 }
