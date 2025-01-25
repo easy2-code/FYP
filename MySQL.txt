@@ -1,0 +1,107 @@
+1:) First we create a database for that we run a query:
+
+    => CREATE DATABASE artice_state;
+
+2:) In articestate we create a table name is Users in which we will store id, username, email, password, createdAt, updatedAt.
+
+    => CREATE TABLE USER (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50),
+    profile_pic VARCHAR(255)
+    );
+
+
+3:) In articestate we create another table name is PROPERTY in which we will store id, title, description, price, type, location, longitue, latitude, owner id, status, 
+
+    => CREATE TABLE PROPERTY (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    price INT NOT NULL,
+    type VARCHAR(100),
+    location VARCHAR(255),
+    longitude INT,
+    latitude INT,
+    owner_id INT,
+    status VARCHAR(50),
+    property_pic VARCHAR(255), -- New column for property picture
+    FOREIGN KEY (owner_id) REFERENCES USER(id)
+    );
+
+
+4:) In articestate we create another talbe name is BOOKING in which we store id, property_id, user_id, status
+
+    => CREATE TABLE BOOKING (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    property_id INT,
+    user_id INT,
+    status VARCHAR(50),
+    FOREIGN KEY (property_id) REFERENCES PROPERTY(id),
+    FOREIGN KEY (user_id) REFERENCES USER(id)
+    );
+
+5:) In articestate we create another talbe name is TRANSACTION in which we store id, property_id, user_id amount, payment_method, status
+
+    => CREATE TABLE TRANSACTION (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    property_id INT,
+    user_id INT,
+    amount INT,
+    payment_method VARCHAR(100),
+    status VARCHAR(50),
+    FOREIGN KEY (property_id) REFERENCES PROPERTY(id),
+    FOREIGN KEY (user_id) REFERENCES USER(id)
+    );
+
+6:) In articestate we create another talbe name is REVIEW in which we store id, property_id, user_id, rating, comment
+
+
+    => CREATE TABLE REVIEW (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    property_id INT,
+    user_id INT,
+    rating VARCHAR(10),
+    comment VARCHAR(255),
+    FOREIGN KEY (property_id) REFERENCES PROPERTY(id),
+    FOREIGN KEY (user_id) REFERENCES USER(id)
+    );
+
+7:) SQL INSERT queries to add dummy data into each table.
+
+8:) Insert into USER Table
+
+    => INSERT INTO USER (name, email, password, role, profile_pic) VALUES
+    ('tayyab', 'tayyab@example.com', 'password123', 'buyer', 'profile1.jpg'),
+    ('usman', 'usman@example.com', 'password456', 'seller', 'profile2.jpg'),
+    ('nauman', 'nauman@example.com', 'password789', 'admin', 'profile3.jpg');
+
+9:) Insert into PROPERTY Table
+
+    => INSERT INTO PROPERTY (title, description, price, type, location, longitude, latitude, owner_id, status, property_pic) VALUES
+    ('Luxury Villa', 'A beautiful villa with 5 bedrooms and a pool.', 500000, 'house', 'Peshawar', 12345, 67890, 2, 'available', 'villa1.jpg'),
+    ('Downtown Apartment', 'A cozy apartment in the city center.', 200000, 'apartment', 'Multan', 54321, 9876, 2, 'available', 'apartment1.jpg'),
+    ('Commercial Plaza', 'Large space for shops and offices.', 800000, 'commercial', 'Lahore', 11111, 22222, 2, 'rented', 'plaza1.jpg');
+
+10:) Insert into BOOKING Table
+
+    => INSERT INTO BOOKING (property_id, user_id, status) VALUES
+    (1, 1, 'pending'),
+    (2, 1, 'confirmed'),
+    (3, 1, 'cancelled');
+
+11:) Insert into TRANSACTION Table
+
+    => INSERT INTO TRANSACTION (property_id, user_id, amount, payment_method, status) VALUES
+    (1, 1, 500000, 'credit card', 'completed'),
+    (2, 1, 200000, 'bank transfer', 'completed'),
+    (3, 1, 800000, 'paypal', 'failed');
+
+12:) Insert into REVIEW Table
+
+    => INSERT INTO REVIEW (property_id, user_id, rating, comment) VALUES
+    (1, 1, '5', 'Amazing villa with stunning views!'),
+    (2, 1, '4', 'Great apartment in a perfect location.'),
+    (3, 1, '3', 'Spacious but needs better maintenance.');

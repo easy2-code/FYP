@@ -1,0 +1,22 @@
+Packages installed for project..
+============================================
+1:) npm create vite@latest project
+2:) cd project
+3:) npm i [in project folder]
+4:) install tailwind css using vite make sure you are in project [in project folder]
+5:) npm install -D tailwindcss postcss autoprefixer [in project folder]
+6:) npx tailwindcss init -p [in project folder]
+7:) npm i react-router-dom [in project folder]
+8:) npm i react-icons [in project folder]
+9:) npm init -y [in FYP folder]
+10:) npm i express [in FYP folder]
+11:) npm i nodemon [in FYP folder]
+12:) npm i mysql2 [in FYP folder]
+13:) npm install dotenv [in FYP folder]
+14:) npm install sequelize mysql2 [in FYP folder]
+15:) npm install bcryptjs [in FYP folder]
+16:) npm i jsonwebtoken [in FYP folder]
+17:) npm install @reduxjs/toolkit react-redux [in project folder]
+18:) npm i redux-persist [in project folder]
+19:) npm install firebase [in project folder]
+20:) npm i cookie-parser [in FYP root folder]
