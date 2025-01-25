@@ -32,6 +32,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false); // State to track loading status
   const [listings, setListings] = useState([]); // State to store user listings
   const [showListings, setShowListings] = useState(false); // State to toggle the display of listings
+  const [userListings, setUserListings] = useState([]); // State to store user listings
 
   useEffect(() => {
     if (file) {
@@ -177,6 +178,23 @@ export default function Profile() {
     }
   };
 
+  // Deleting listing function
+  const handleListingDelete = async (id) => {
+    try {
+      const res = await fetch(`/api/listing/delete/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        console.log(data.message);
+        return;
+      }
+      setUserListings((prev) => prev.filter((listing) => listing.id !== id));
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">Profile</h1>
@@ -313,11 +331,6 @@ export default function Profile() {
         </span>
       </div>
 
-      {/* Success message */}
-      {message && (
-        <div className="text-green-700 py-7 rounded-lg">{message}</div>
-      )}
-
       <div className="mt-8">
         <button
           onClick={handleShowListings}
@@ -367,7 +380,10 @@ export default function Profile() {
                             <button className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600">
                               Edit
                             </button>
-                            <button className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600">
+                            <button
+                              onClick={() => handleListingDelete(listing.id)}
+                              className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
+                            >
                               Delete
                             </button>
                           </div>
@@ -379,7 +395,7 @@ export default function Profile() {
             </ul>
           </div>
         ) : (
-          <p className="text-center text-gray-500">{message}</p>
+          <p className="text-center mt-10 text-green-700">{message}</p>
         )}
       </div>
     </div>

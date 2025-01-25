@@ -27,7 +27,7 @@
 ✅Complete create listing page functionality 
 ✅Create get user listings API route
 ✅Complete show user listings functionality
-Complete delete user listing functionality
+✅Complete delete user listing functionality
 Create update listing API route
 Complete update listing functionality 
 Add image slider to the listing page
